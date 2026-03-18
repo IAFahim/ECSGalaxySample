@@ -286,6 +286,21 @@ MonoBehaviour:
   m_UIInfos: {fileID: 114340500867371532}
   m_CustomAttributes: []
   m_ParameterInfo:
+  - name: SpawnRequestsBuffer
+    path: 
+    tooltip: 
+    space: -1
+    spaceable: 0
+    sheetType: 
+    realType: GraphicsBuffer
+    defaultValue:
+      m_Type:
+        m_SerializableType: 
+      m_SerializableObject: 
+    min: -Infinity
+    max: Infinity
+    enumValues: []
+    descendantCount: 0
   - name: SpawnRequestsCount
     path: SpawnRequestsCount
     tooltip: 
@@ -298,21 +313,6 @@ MonoBehaviour:
         m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
           PublicKeyToken=b77a5c561934e089
       m_SerializableObject: 0
-    min: -Infinity
-    max: Infinity
-    enumValues: []
-    descendantCount: 0
-  - name: SpawnRequestsBuffer
-    path: 
-    tooltip: 
-    space: -1
-    spaceable: 0
-    sheetType: 
-    realType: GraphicsBuffer
-    defaultValue:
-      m_Type:
-        m_SerializableType: 
-      m_SerializableObject: 
     min: -Infinity
     max: Infinity
     enumValues: []
@@ -379,6 +379,22 @@ MonoBehaviour:
     max: Infinity
     enumValues: []
     descendantCount: 0
+  - name: SparksColor
+    path: SparksColor
+    tooltip: 
+    space: -1
+    spaceable: 0
+    sheetType: m_Vector4f
+    realType: Color
+    defaultValue:
+      m_Type:
+        m_SerializableType: UnityEngine.Color, UnityEngine.CoreModule, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+      m_SerializableObject: '{"r":1663.49267578125,"g":566.0763549804688,"b":0.0,"a":1.0}'
+    min: -Infinity
+    max: Infinity
+    enumValues: []
+    descendantCount: 0
   - name: SparksMinCount
     path: SparksMinCount
     tooltip: 
@@ -427,8 +443,8 @@ MonoBehaviour:
     max: Infinity
     enumValues: []
     descendantCount: 0
-  - name: SparksLifetime
-    path: SparksLifetime
+  - name: SparksSize
+    path: SparksSize
     tooltip: 
     space: -1
     spaceable: 0
@@ -443,8 +459,8 @@ MonoBehaviour:
     max: Infinity
     enumValues: []
     descendantCount: 0
-  - name: SparksSize
-    path: SparksSize
+  - name: SparksLifetime
+    path: SparksLifetime
     tooltip: 
     space: -1
     spaceable: 0
@@ -475,22 +491,6 @@ MonoBehaviour:
     max: Infinity
     enumValues: []
     descendantCount: 0
-  - name: SparksColor
-    path: SparksColor
-    tooltip: 
-    space: -1
-    spaceable: 0
-    sheetType: m_Vector4f
-    realType: Color
-    defaultValue:
-      m_Type:
-        m_SerializableType: UnityEngine.Color, UnityEngine.CoreModule, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"r":1663.49267578125,"g":566.0763549804688,"b":0.0,"a":1.0}'
-    min: -Infinity
-    max: Infinity
-    enumValues: []
-    descendantCount: 0
   - name: Flames
     path: 
     tooltip: 
@@ -502,6 +502,22 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: 
       m_SerializableObject: 
+    min: -Infinity
+    max: Infinity
+    enumValues: []
+    descendantCount: 0
+  - name: FlamesGradient
+    path: FlamesGradient
+    tooltip: 
+    space: -1
+    spaceable: 0
+    sheetType: m_Gradient
+    realType: Gradient
+    defaultValue:
+      m_Type:
+        m_SerializableType: UnityEngine.Gradient, UnityEngine.CoreModule, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+      m_SerializableObject: '{"colorKeys":[{"color":{"r":0.0,"g":0.7706911563873291,"b":1.0,"a":1.0},"time":0.0},{"color":{"r":1.0,"g":0.1304381787776947,"b":0.0,"a":1.0},"time":0.27647823095321658},{"color":{"r":0.0,"g":0.0,"b":0.0,"a":1.0},"time":0.7047073841094971}],"alphaKeys":[{"alpha":1.0,"time":0.0},{"alpha":0.800000011920929,"time":0.8576486110687256},{"alpha":0.0,"time":1.0}],"gradientMode":0}'
     min: -Infinity
     max: Infinity
     enumValues: []
@@ -618,22 +634,6 @@ MonoBehaviour:
     max: Infinity
     enumValues: []
     descendantCount: 0
-  - name: FlamesGradient
-    path: FlamesGradient
-    tooltip: 
-    space: -1
-    spaceable: 0
-    sheetType: m_Gradient
-    realType: Gradient
-    defaultValue:
-      m_Type:
-        m_SerializableType: UnityEngine.Gradient, UnityEngine.CoreModule, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"colorKeys":[{"color":{"r":0.0,"g":0.7706911563873291,"b":1.0,"a":1.0},"time":0.0},{"color":{"r":1.0,"g":0.1304381787776947,"b":0.0,"a":1.0},"time":0.27647823095321658},{"color":{"r":0.0,"g":0.0,"b":0.0,"a":1.0},"time":0.7047073841094971}],"alphaKeys":[{"alpha":1.0,"time":0.0},{"alpha":0.800000011920929,"time":0.8576486110687256},{"alpha":0.0,"time":1.0}],"gradientMode":0}'
-    min: -Infinity
-    max: Infinity
-    enumValues: []
-    descendantCount: 0
   - name: Flash
     path: 
     tooltip: 
@@ -665,22 +665,6 @@ MonoBehaviour:
     max: Infinity
     enumValues: []
     descendantCount: 0
-  - name: FlashSize
-    path: FlashSize
-    tooltip: 
-    space: -1
-    spaceable: 0
-    sheetType: m_Float
-    realType: Single
-    defaultValue:
-      m_Type:
-        m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
-          PublicKeyToken=b77a5c561934e089
-      m_SerializableObject: 5
-    min: -Infinity
-    max: Infinity
-    enumValues: []
-    descendantCount: 0
   - name: FlashColor
     path: FlashColor
     tooltip: 
@@ -697,8 +681,24 @@ MonoBehaviour:
     max: Infinity
     enumValues: []
     descendantCount: 0
+  - name: FlashSize
+    path: FlashSize
+    tooltip: 
+    space: -1
+    spaceable: 0
+    sheetType: m_Float
+    realType: Single
+    defaultValue:
+      m_Type:
+        m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 5
+    min: -Infinity
+    max: Infinity
+    enumValues: []
+    descendantCount: 0
   m_ImportDependencies: []
-  m_GraphVersion: 18
+  m_GraphVersion: 19
   m_ResourceVersion: 1
   m_SubgraphDependencies: []
   m_CategoryPath: 
@@ -714,10 +714,6 @@ VisualEffectResource:
     m_RendererSettings:
       motionVectorGenerationMode: 0
       shadowCastingMode: 0
-      rayTracingMode: 0
-      receiveShadows: 0
-      reflectionProbeUsage: 0
-      lightProbeUsage: 0
     m_CullingFlags: 3
     m_UpdateMode: 1
     m_PreWarmDeltaTime: 0.05
@@ -1211,7 +1207,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614607}
   m_ExposedName: SpawnRequestsBuffer
   m_Exposed: 1
-  m_Order: 7
+  m_Order: 0
   m_Category: 
   m_Min:
     m_Type:
@@ -1389,7 +1385,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614613}
   m_ExposedName: SpawnRequestsCount
   m_Exposed: 1
-  m_Order: 0
+  m_Order: 1
   m_Category: 
   m_Min:
     m_Type:
@@ -1996,6 +1992,7 @@ MonoBehaviour:
   sortingPriority: 0
   m_SubOutputs:
   - {fileID: 8926484042661615571}
+  useBaseColorMap: 3
   colorMapping: 0
   uvMode: 0
   flipbookLayout: 0
@@ -2080,7 +2077,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614715}
   m_ExposedName: Bounds
   m_Exposed: 1
-  m_Order: 13
+  m_Order: 2
   m_Category: 
   m_Min:
     m_Type:
@@ -2607,7 +2604,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614891}
   m_ExposedName: SparksColor
   m_Exposed: 1
-  m_Order: 19
+  m_Order: 3
   m_Category: Sparks
   m_Min:
     m_Type:
@@ -3748,6 +3745,7 @@ MonoBehaviour:
   sortingPriority: 0
   m_SubOutputs:
   - {fileID: 8926484042661615572}
+  useBaseColorMap: 3
   colorMapping: 0
   uvMode: 0
   flipbookLayout: 0
@@ -3891,7 +3889,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614953}
   m_ExposedName: SparksMinCount
   m_Exposed: 1
-  m_Order: 1
+  m_Order: 4
   m_Category: Sparks
   m_Min:
     m_Type:
@@ -3972,7 +3970,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614955}
   m_ExposedName: SparksMaxCount
   m_Exposed: 1
-  m_Order: 4
+  m_Order: 5
   m_Category: Sparks
   m_Min:
     m_Type:
@@ -4537,7 +4535,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615135}
   m_ExposedName: SparksSpeed
   m_Exposed: 1
-  m_Order: 8
+  m_Order: 6
   m_Category: Sparks
   m_Min:
     m_Type:
@@ -4686,7 +4684,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615139}
   m_ExposedName: SparksSize
   m_Exposed: 1
-  m_Order: 14
+  m_Order: 7
   m_Category: Sparks
   m_Min:
     m_Type:
@@ -4839,7 +4837,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615143}
   m_ExposedName: SparksLifetime
   m_Exposed: 1
-  m_Order: 11
+  m_Order: 8
   m_Category: Sparks
   m_Min:
     m_Type:
@@ -6082,6 +6080,7 @@ MonoBehaviour:
   sortingPriority: 0
   m_SubOutputs:
   - {fileID: 8926484042661615573}
+  useBaseColorMap: 3
   colorMapping: 0
   uvMode: 0
   flipbookLayout: 0
@@ -6288,7 +6287,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615252}
   m_ExposedName: FlashDuration
   m_Exposed: 1
-  m_Order: 2
+  m_Order: 9
   m_Category: Flash
   m_Min:
     m_Type:
@@ -6372,7 +6371,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615254}
   m_ExposedName: FlashColor
   m_Exposed: 1
-  m_Order: 9
+  m_Order: 10
   m_Category: Flash
   m_Min:
     m_Type:
@@ -6589,7 +6588,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615260}
   m_ExposedName: FlashSize
   m_Exposed: 1
-  m_Order: 5
+  m_Order: 11
   m_Category: Flash
   m_Min:
     m_Type:
@@ -6892,7 +6891,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615274}
   m_ExposedName: FlamesGradient
   m_Exposed: 1
-  m_Order: 20
+  m_Order: 12
   m_Category: Flames
   m_Min:
     m_Type:
@@ -6973,7 +6972,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615276}
   m_ExposedName: FlamesMinCount
   m_Exposed: 1
-  m_Order: 3
+  m_Order: 13
   m_Category: Flames
   m_Min:
     m_Type:
@@ -7054,7 +7053,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615278}
   m_ExposedName: FlamesMaxCount
   m_Exposed: 1
-  m_Order: 6
+  m_Order: 14
   m_Category: Flames
   m_Min:
     m_Type:
@@ -7135,7 +7134,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615280}
   m_ExposedName: FlamesSpeed
   m_Exposed: 1
-  m_Order: 10
+  m_Order: 15
   m_Category: Flames
   m_Min:
     m_Type:
@@ -7285,7 +7284,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615284}
   m_ExposedName: FlamesLifetime
   m_Exposed: 1
-  m_Order: 12
+  m_Order: 16
   m_Category: Flames
   m_Min:
     m_Type:
@@ -7434,7 +7433,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615288}
   m_ExposedName: FlamesSize
   m_Exposed: 1
-  m_Order: 15
+  m_Order: 17
   m_Category: Flames
   m_Min:
     m_Type:
@@ -8634,7 +8633,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615395}
   m_ExposedName: SparksSpeedScaling
   m_Exposed: 1
-  m_Order: 16
+  m_Order: 18
   m_Category: Sparks
   m_Min:
     m_Type:
@@ -8715,7 +8714,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615397}
   m_ExposedName: FlamesSpeedScaling
   m_Exposed: 1
-  m_Order: 17
+  m_Order: 19
   m_Category: Flames
   m_Min:
     m_Type:
@@ -8796,7 +8795,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615401}
   m_ExposedName: FlamesLifetimeScaling
   m_Exposed: 1
-  m_Order: 18
+  m_Order: 20
   m_Category: Flames
   m_Min:
     m_Type:
