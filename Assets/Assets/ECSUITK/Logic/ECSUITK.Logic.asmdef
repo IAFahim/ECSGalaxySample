@@ -1,0 +1,19 @@
+{
+    "name": "ECSUITK.Logic",
+    "rootNamespace": "",
+    "references": [
+        "ECSUITK.Data",
+        "Unity.Entities",
+        "Unity.Collections",
+        "Unity.Burst"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
