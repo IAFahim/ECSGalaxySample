@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <Style src="project://database/Assets/Scenes/UI/ScoreScreen.uss?fileID=7433441132597879392&amp;guid=d3e5c58f0af0f351499ebdc18b46dce4&amp;type=3#ScoreScreen"/>
+    <ui:VisualElement name="score-container" class="score-container">
+        <ui:Label text="SCORE: 0" name="score-label" class="score-label" />
+    </ui:VisualElement>
+</ui:UXML>

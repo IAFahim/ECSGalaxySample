@@ -31,14 +31,12 @@ public static class PlanetNavigationGridUtility
     {
         Entity gridEntity = ecb.CreateEntity();
 
-        // Grid
         PlanetNavigationGrid planetNavigationGrid = new PlanetNavigationGrid
         {
             Grid = new UniformOriginGrid(halfExtents, subdivisions),
         };
         ecb.AddComponent(gridEntity, planetNavigationGrid);
-        
-        // Cells
+
         DynamicBuffer<PlanetNavigationCell> cellsBuffer = ecb.AddBuffer<PlanetNavigationCell>(gridEntity);
         cellsBuffer.Resize(planetNavigationGrid.Grid.CellCount, NativeArrayOptions.ClearMemory);
         for (int c = 0; c < cellsBuffer.Length; c++)
@@ -52,8 +50,7 @@ public static class PlanetNavigationGridUtility
                 Radius = 0f,
                 Entity = Entity.Null,
             };
-            
-            // Find the closest planet
+
             float closestDistance = float.MaxValue;
             for (int p = 0; p < planetDatas.Length; p++)
             {
@@ -69,8 +66,7 @@ public static class PlanetNavigationGridUtility
                     closestDistance = cellToPlanetSurfaceDistance;
                 }
             }
-            
-            // Write info to cell
+
             cellsBuffer[c] = closestPlanetData;
         }
         

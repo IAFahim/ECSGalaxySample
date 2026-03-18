@@ -127,11 +127,9 @@ public struct UniformOriginGrid
     {
         if (AABBIntersectAABB(aabbMin, aabbMax, grid.BoundsMin, grid.BoundsMax))
         {
-            // Clamp to bounds
             aabbMin = math.clamp(aabbMin, grid.BoundsMin, grid.BoundsMax);
             aabbMax = math.clamp(aabbMax, grid.BoundsMin, grid.BoundsMax);
 
-            // Get min max coords
             minCoords = GetCellCoordsFromPosition(in grid, aabbMin);
             maxCoords = GetCellCoordsFromPosition(in grid, aabbMax);
 

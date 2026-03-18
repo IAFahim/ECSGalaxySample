@@ -108,7 +108,6 @@ public class SimulationDebug : MonoBehaviour
                     DynamicBuffer<SpatialDatabaseElement> elementsBuffer =
                         entityManager.GetBuffer<SpatialDatabaseElement>(spatialDatabaseEntity);
 
-                    // Draw grid cells
                     if (DebugSpatialDatabaseCells)
                     {
                         int3 maxCoords = new int3
@@ -148,7 +147,6 @@ public class SimulationDebug : MonoBehaviour
                         }
                     }
 
-                    // Draw bounds
                     {
                         Gizmos.color = SpatialDatabaseBoundsColor;
                         Gizmos.DrawWireCube(default, new float3(spatialDatabase.Grid.HalfExtents) * 2f);
@@ -172,7 +170,6 @@ public class SimulationDebug : MonoBehaviour
                 PlanetNavigationGrid planetNavGrid = planetNavGridQuery.GetSingleton<PlanetNavigationGrid>();
                 DynamicBuffer<PlanetNavigationCell> planetNavCellsBuffer = planetNavGridQuery.GetSingletonBuffer<PlanetNavigationCell>();
 
-                // Draw grid cells
                 if (DebugPlanetNavGridCells)
                 {
                     Gizmos.color = PlanetNavGridCellsColor;
@@ -204,7 +201,6 @@ public class SimulationDebug : MonoBehaviour
                     }
                 }
 
-                // Draw cell datas
                 if (DebugPlanetNavGridCellDatas)
                 {
                     for (int i = 0; i < planetNavCellsBuffer.Length; i++)
@@ -218,7 +214,6 @@ public class SimulationDebug : MonoBehaviour
                     }
                 }
 
-                // Draw bounds
                 {
                     Gizmos.color = PlanetNavGridBoundsColor;
                     Gizmos.DrawWireCube(default, new float3(planetNavGrid.Grid.HalfExtents) * 2f);
@@ -285,27 +280,23 @@ public class SimulationDebug : MonoBehaviour
                 Fighter fighter = entityManager.GetComponentData<Fighter>(fighterEntity);
                 LocalTransform transform = entityManager.GetComponentData<LocalTransform>(fighterEntity);
 
-                // Chase
                 if (fighter.TargetIsEnemyShip == 1)
                 {
                     Gizmos.color = FighterChaseColor;
                     Gizmos.DrawLine(transform.Position, ship.NavigationTargetPosition);
                 }
 
-                // Planets
                 if (ship.NavigationTargetEntity != Entity.Null)
                 {
                     Team selfTeam = entityManager.GetComponentData<Team>(fighterEntity);
                     Team targetTeam = entityManager.GetComponentData<Team>(ship.NavigationTargetEntity);
                     float3 targetPosition = ship.NavigationTargetPosition;
 
-                    // Defend
                     if (selfTeam.Index == targetTeam.Index)
                     {
                         Gizmos.color = FighterDefendColor;
                         Gizmos.DrawLine(transform.Position, targetPosition);
                     }
-                    // Attack
                     else
                     {
                         Gizmos.color = FighterAttackColor;
@@ -335,13 +326,11 @@ public class SimulationDebug : MonoBehaviour
 
                     float3 targetPosition = ship.NavigationTargetPosition;
 
-                    // Build
                     if (worker.DesiredBuildingPrefab != Entity.Null)
                     {
                         Gizmos.color = WorkerBuildColor;
                         Gizmos.DrawLine(transform.Position, targetPosition);
                     }
-                    // Capture
                     else
                     {
                         Gizmos.color = WorkerCaptureColor;
@@ -368,7 +357,6 @@ public class SimulationDebug : MonoBehaviour
 
                 if (ship.NavigationTargetEntity != Entity.Null && trader.ReceivingPlanetEntity != Entity.Null)
                 {
-                    // Giver
                     if (ship.NavigationTargetEntity != trader.ReceivingPlanetEntity)
                     {
                         LocalTransform giverTransform = entityManager.GetComponentData<LocalTransform>(ship.NavigationTargetEntity);
@@ -376,14 +364,12 @@ public class SimulationDebug : MonoBehaviour
                         Gizmos.DrawLine(transform.Position, giverTransform.Position);
                     }
 
-                    // Receiver
                     LocalTransform receiverTransform = entityManager.GetComponentData<LocalTransform>(trader.ReceivingPlanetEntity);
                     Gizmos.color = TraderToReceiverColor;
                     Gizmos.DrawLine(transform.Position, receiverTransform.Position);
 
-                    // Cargo
                     float cargoRatio = math.csum(trader.CarriedResources) /
-                                        trader.TraderData.Value.ResourceCarryCapacity;
+                                       trader.TraderData.Value.ResourceCarryCapacity;
                     bool3 cargoMask = trader.ChosenResourceMask > new float3(0.5f);
                     Gizmos.color = Color.white;
                     if (cargoMask.x)

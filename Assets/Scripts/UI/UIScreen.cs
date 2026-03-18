@@ -21,11 +21,8 @@ namespace Galaxy
         #region Inspector fields
         protected bool m_HideOnAwake = true;
 
-        // Is the UI partially see-through? (i.e. use overlay effect)
         protected bool m_IsTransparent;
 
-        // The topmost visual element of the screen (this often is the rootVisualElement
-        // but can be a different element if necessary)
         protected VisualElement m_RootElement;
         protected EventRegistry m_EventRegistry;
         #endregion
@@ -38,16 +35,14 @@ namespace Galaxy
         
         #endregion
 
-        // Constructor
         public UIScreen(VisualElement parentElement)
         {
-            // Required topmost VisualElement 
             m_RootElement = parentElement ?? throw new ArgumentNullException(nameof(parentElement));
             Initialize();
         }
 
         #region Methods
-        // Registers a callback, TransitionEndEvent, on the m_ParentElement; creates a default EventRegistry
+
         public virtual void Initialize()
         {
             if (m_HideOnAwake)
@@ -58,7 +53,6 @@ namespace Galaxy
             m_EventRegistry = new EventRegistry();
         }
 
-        // Unregister events from an external objects
         public virtual void Disable()
         {
             m_EventRegistry.Dispose();

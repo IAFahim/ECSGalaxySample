@@ -12,7 +12,6 @@ namespace Galaxy
         private TabMenu m_SettingTabMenu;
         private Button m_BackButton;
 
-        // Simulation Settings
         private TextField m_TimeScaleField;
         private TextField m_TeamCountField;
         private Toggle m_UseNonDeterministicRandomSeedToggle;
@@ -31,7 +30,6 @@ namespace Galaxy
         private Vector3Field m_ResourceGenerationRateMaxField;
         private Vector3Field m_PlanetResourceMaxStorageField;
 
-        // Ship Settings
         private VisualElement m_ShipSettingsContainer;
         private VisualTreeAsset m_ShipSettingsTemplate;
         private VisualTreeAsset m_FighterSettingsTemplate;
@@ -64,7 +62,6 @@ namespace Galaxy
         {
             m_BackButton = m_RootElement.Q<Button>("settings-back-button");
 
-            // Simulation Settings
             m_TimeScaleField = m_RootElement.Q<TextField>("time-scale-field");
             m_TeamCountField = m_RootElement.Q<TextField>("team-count-field");
             m_UseNonDeterministicRandomSeedToggle = m_RootElement.Q<Toggle>("use-non-deterministic-random-seed-toggle");
@@ -85,13 +82,10 @@ namespace Galaxy
             m_ResourceGenerationRateMaxField = m_RootElement.Q<Vector3Field>("resource-generation-rate-max-field");
             m_PlanetResourceMaxStorageField = m_RootElement.Q<Vector3Field>("planet-resource-max-storage-field");
 
-            // Ship Settings
             m_ShipSettingsContainer = m_RootElement.Q<VisualElement>("ship-settings-container");
 
-            // Tab Menu
             m_SettingTabMenu = new TabMenu(m_RootElement);
 
-            // Get Ship Settings Template
             m_ShipSettingsTemplate = Resources.Load<VisualTreeAsset>("UI/ShipSettingsTemplate");
             m_FighterSettingsTemplate = Resources.Load<VisualTreeAsset>("UI/FighterSettingsTemplate");
             m_WorkerSettingsTemplate = Resources.Load<VisualTreeAsset>("UI/WorkerSettingsTemplate");
@@ -118,8 +112,7 @@ namespace Galaxy
                 GameUtilities.TryGetSingleton(entityManager, out Config config))
             {
                 DynamicBuffer<TeamConfig> teamBuffer = entityManager.GetBuffer<TeamConfig>(configEntity);
-                
-                // Simulation Settings
+
                 m_TimeScaleField.SetValueWithoutNotify(simulationRate.TimeScale.ToString());
                 m_TeamCountField.SetValueWithoutNotify(teamBuffer.Length.ToString());
                 m_UseNonDeterministicRandomSeedToggle.SetValueWithoutNotify(config.UseNonDeterministicRandomSeed);
@@ -138,7 +131,6 @@ namespace Galaxy
                 m_ResourceGenerationRateMaxField.SetValueWithoutNotify(config.ResourceGenerationRateMax);
                 m_PlanetResourceMaxStorageField.SetValueWithoutNotify(config.PlanetResourceMaxStorage);
 
-                // Ship settings
                 NativeArray<ShipCollection> shipCollectionBuffer =
                     entityManager.GetBuffer<ShipCollection>(configEntity).ToNativeArray(Allocator.Temp);
                 for (int i = 0; i < shipCollectionBuffer.Length; i++)
@@ -216,7 +208,6 @@ namespace Galaxy
             if (GameUtilities.TryGetSingletonEntity<Config>(entityManager, out Entity configEntity) &&
                 GameUtilities.TryGetSingletonRW(entityManager, out RefRW<Config> config))
             {
-                // Config
                 config.ValueRW.UseNonDeterministicRandomSeed = m_UseNonDeterministicRandomSeedToggle.value;
                 config.ValueRW.MaxTotalShips = int.Parse(m_MaxTotalShipsField.value);
                 config.ValueRW.MaxShipsPerTeam = int.Parse(m_MaxTeamShipsField.value);
@@ -231,12 +222,10 @@ namespace Galaxy
                 config.ValueRW.ResourceGenerationRateMax = m_ResourceGenerationRateMaxField.value;
                 config.ValueRW.PlanetResourceMaxStorage = m_PlanetResourceMaxStorageField.value;
 
-                // Simulation rate
                 GameUtilities.SetUseFixedRate(worldUnmanaged, m_UseFixedSimulationRateToggle.value);
                 GameUtilities.SetFixedTimeStep(worldUnmanaged, float.Parse(m_FixedRateField.value));
                 GameUtilities.SetTimeScale(worldUnmanaged, float.Parse(m_TimeScaleField.value));
 
-                // Teams
                 {
                     DynamicBuffer<TeamConfig> teamBuffer = entityManager.GetBuffer<TeamConfig>(configEntity);
                     teamBuffer.Clear();

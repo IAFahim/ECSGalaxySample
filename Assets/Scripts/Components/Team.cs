@@ -81,16 +81,10 @@ namespace Galaxy
         public float3 ResourceGenerationRate;
         public float3 CurrentResourceStorage;
         public float3 MaxResourceStorage;
-        
-        //public int AlliedShips;
+
         public int AlliedFighters;
-        //public int AlliedWorkers;
-        //public int AlliedTraders;
-        
-        //public int EnemyShips;
+
         public int EnemyFighters;
-        //public int EnemyWorkers;
-        //public int EnemyTraders;
 
         public Entity FreeMoonEntity;
         public int TotalMoonsCount;
@@ -118,7 +112,7 @@ namespace Galaxy
     [InternalBufferCapacity(0)]
     public struct WorkerAction : IBufferElementData
     {
-        public byte Type; // 0 is CapturePlanet, 1 is BuildBuilding
+        public byte Type;
         public Entity BuildingPrefab;
         public Entity Entity;
         public float3 Position;

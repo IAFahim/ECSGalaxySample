@@ -32,7 +32,6 @@ public class SpatialDatabaseAuthoring : MonoBehaviour
     {
         UniformOriginGrid grid = new UniformOriginGrid(HalfExtents, Subdivisions);
 
-        // Draw grid cells
         if (DebugCells)
         {
             Color col = Color.cyan;
@@ -69,7 +68,6 @@ public class SpatialDatabaseAuthoring : MonoBehaviour
             }
         }
 
-        // Draw bounds
         {
             Gizmos.color = Color.cyan;
             Gizmos.DrawWireCube(default, new float3(grid.HalfExtents) * 2f);

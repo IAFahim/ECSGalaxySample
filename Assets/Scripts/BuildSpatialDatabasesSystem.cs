@@ -46,9 +46,6 @@ namespace Galaxy
                 };
                 state.Dependency = buildJob.ScheduleParallel(state.Dependency);
 
-                // The following job is only necessary for determinism.
-                // It sorts spatial database entries in every cell by Entity index, so that no matter in
-                // what order they were added, the results will always be the same.
                 int workersCountForSort = math.max(1, JobsUtility.JobWorkerCount - 1);
                 SortSpatialDatabaseCellElementsParallelJob sortElementsJob =
                     new SortSpatialDatabaseCellElementsParallelJob
@@ -163,15 +160,6 @@ namespace Galaxy
                     int excessCount = cell.GetExcessElementsCount();
                     if (excessCount > 0)
                     {
-                        // In cases of excess, we have to clear all elements of the cell. This is for the sake of
-                        // determinism. Because cell storage capacity doesn't grow as we add elements, and because
-                        // elements don't get added when we're over capacity, there is a possibility that the entities
-                        // added to a cell will differ from one run to another. So for determinism, when we overflow 
-                        // capacity, we will have one frame of empty spatial DB so that the next frame can be valid and
-                        // deterministic.
-                        
-                        // We flip the sign of elements count to signify "invalid". The clear and resize system will use
-                        // the abs value to know what the new capacity should be
                         cell.UncappedElementsCount = -cell.UncappedElementsCount;
                         cells[i] = cell;
                     }
@@ -182,8 +170,7 @@ namespace Galaxy
                         {
                             UnsafeList<SpatialDatabaseElement> elementsSubList =
                                 new UnsafeList<SpatialDatabaseElement>(elements.Ptr + (long)cell.StartIndex, trueElementsCount);
-                        
-                            // Sort elements by ascending entity index, for determinism
+
                             elementsSubList.Sort();
                         }
                     }

@@ -90,8 +90,7 @@ public static class MathUtilities
     {
         int initialPointsCount = points.Length;
         int totalPointsCount = initialPointsCount + newPointsCount;
-        
-        // First pass: generate points around the sphere in a semi-regular distribution
+
         float goldenRatio = 1 + (math.sqrt(5f) / 4f);
         float angleIncrement = math.PI * 2f * goldenRatio;
         for (int i = initialPointsCount; i < totalPointsCount; i++)
@@ -110,7 +109,6 @@ public static class MathUtilities
             points.Add(point);
         }
 
-        // Second pass: make points repel each other
         if (points.Length > 1)
         {
             float repelAngleIncrements = math.PI * 0.01f;

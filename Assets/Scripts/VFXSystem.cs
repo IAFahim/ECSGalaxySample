@@ -218,7 +218,6 @@ namespace Galaxy
         {
             if (FreeIndexes.TryDequeue(out int index))
             {
-                // Request to spawn
                 if (RequestsCount.Value < Requests.Length)
                 {
                     Requests[RequestsCount.Value] = new VFXSpawnToDataRequest
@@ -288,18 +287,15 @@ namespace Galaxy
         {
             state.RequireForUpdate<GameIsSimulating>();
 
-            // Names to Ids
             _spawnBatchId = Shader.PropertyToID("SpawnBatch");
             _requestsCountId = Shader.PropertyToID("SpawnRequestsCount");
             _requestsBufferId = Shader.PropertyToID("SpawnRequestsBuffer");
             _datasBufferId = Shader.PropertyToID("DatasBuffer");
 
-            // VFX managers
             _hitSparksManager = new VFXManager<VFXHitSparksRequest>(HitSparksCapacity, ref VFXReferences.HitSparksRequestsBuffer);
             _explosionsManager = new VFXManager<VFXExplosionRequest>(ExplosionsCapacity, ref VFXReferences.ExplosionsRequestsBuffer);
             _thrustersManager = new VFXManagerParented<VFXThrusterData>(ThrustersCapacity, ref VFXReferences.ThrusterRequestsBuffer, ref VFXReferences.ThrusterDatasBuffer);
 
-            // Singletons
             state.EntityManager.AddComponentData(state.EntityManager.CreateEntity(), new VFXHitSparksSingleton
             {
                 Manager = _hitSparksManager,
@@ -323,12 +319,10 @@ namespace Galaxy
         
         public void OnUpdate(ref SystemState state)
         {
-            // This is required because we must use data in native collections on the main thread, to send it to VFXGraphs
             SystemAPI.QueryBuilder().WithAll<VFXHitSparksSingleton>().Build().CompleteDependency();
             SystemAPI.QueryBuilder().WithAll<VFXExplosionsSingleton>().Build().CompleteDependency();
             SystemAPI.QueryBuilder().WithAll<VFXThrustersSingleton>().Build().CompleteDependency();
-            
-            // Update managers
+
             float rateRatio = SystemAPI.Time.DeltaTime / Time.deltaTime;
             
             _hitSparksManager.Update(

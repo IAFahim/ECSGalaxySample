@@ -9,12 +9,10 @@ public class ShipSettingData
     private VisualElement m_Root;
     private Label m_TitleLabel;
 
-    // General Movement
     private TextField m_MaxSpeedField;
     private TextField m_AcceleartionField;
     private TextField m_SteeringSharpnessField;
 
-    // Construction
     private TextField m_ConstructionValueField;
     private TextField m_BuildProbabilityForShipTypeField;
     private Vector3Field m_ResourcesCostField;

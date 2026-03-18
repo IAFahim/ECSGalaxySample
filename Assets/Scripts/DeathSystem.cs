@@ -65,8 +65,7 @@ namespace Galaxy
                     {
                         BuildingEntity = Entity.Null,
                     });
-                
-                    // VFX
+
                     {
                         Random random = GameUtilities.GetDeterministicRandom(entity.Index);
                         BuildingData buildingData = building.BuildingData.Value;
@@ -92,9 +91,7 @@ namespace Galaxy
             {
                 if (health.IsDead)
                 {
-                    // VFX
                     {
-                        // Explosion
                         Random random = GameUtilities.GetDeterministicRandom(entity.Index);
                         ShipData shipData = ship.ShipData.Value;
                         float explosionSize =
@@ -105,7 +102,6 @@ namespace Galaxy
                             Scale = explosionSize,
                         });
 
-                        // Thruster
                         ThrustersManager.Kill(ship.ThrusterVFXIndex);
                     }
                 }

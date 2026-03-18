@@ -33,10 +33,8 @@ namespace Galaxy
         [BurstCompile(FloatPrecision.High, FloatMode.Deterministic)]
         public void OnUpdate(ref SystemState state)
         {
-            // Initialize the game when we find a config singleton with disabled initialized state
             if (SystemAPI.TryGetSingleton(out Config config))
             {
-                // Handle accelerating to max ships cap
                 if(config.AccelerateToMaxTotalShipsCap)
                 {
                     ref SimulationRate simRate = ref SystemAPI.GetSingletonRW<SimulationRate>().ValueRW;
@@ -58,7 +56,6 @@ namespace Galaxy
                 if (!config.MustInitializeGame)
                     return;
 
-                // Set state to initialized
                 config.MustInitializeGame = false;
                 SystemAPI.SetSingleton(config);
 
@@ -66,29 +63,24 @@ namespace Galaxy
 
                 if (gameIsSimulating.CalculateEntityCount() > 0)
                     return;
-                
-                // Create a tag entity to notify all systems that the simulation is now running
+
                 state.EntityManager.AddComponentData(state.EntityManager.CreateEntity(), new GameIsSimulating ());
 
-                // Get and create initialization data
                 float simulationCubeHalfExtents = config.HomePlanetSpawnRadius + config.SimulationBoundsPadding;
                 int teamsCount = SystemAPI.GetSingletonBuffer<TeamConfig>().Length;
                 int spawnedPlanetCounter = 0;
 
-                // Random
                 Random random = new Random(config.GameInitializationRandomSeed);
                 if (config.UseNonDeterministicRandomSeed)
                 {
                     random = new Random(_nonDeterministicSeed);
                 }
 
-                // Create some game management entities
                 Entity teamManagerReferencesSingletonEntity =
                     state.EntityManager.Instantiate(config.TeamManagerReferencesPrefab);
                 Entity runtimeResourcesEntity = state.EntityManager.CreateEntity();
                 state.EntityManager.AddComponentData(runtimeResourcesEntity, new SpatialDatabaseSingleton());
 
-                // Allocations
                 NativeList<Entity> homePlanetEntities = new NativeList<Entity>(Allocator.Temp);
                 NativeArray<ShipCollection> shipsCollection =
                     SystemAPI.GetSingletonBuffer<ShipCollection>().ToNativeArray(Allocator.Temp);
@@ -101,7 +93,6 @@ namespace Galaxy
                     teamManagerReferencesSingletonEntity, ref homePlanetEntities);
                 SpawnNeutralPlanets(ref state, in config, ref random, teamsCount, ref spawnedPlanetCounter);
 
-                // Allocations
                 EntityQuery planetsQuery = SystemAPI.QueryBuilder().WithAll<Planet, LocalTransform>().Build();
                 NativeArray<Entity> planetEntities = planetsQuery.ToEntityArray(AllocatorManager.Temp);
                 NativeArray<LocalTransform> planetTransforms =
@@ -143,10 +134,8 @@ namespace Galaxy
             teamsCount = math.min(255, teamsCount);
             for (int i = 0; i < teamsCount; i++)
             {
-                // Create team manager entity 
                 Entity teamManagerEntity = state.EntityManager.Instantiate(config.TeamManagerPrefab);
 
-                // Add team data
                 DynamicBuffer<TeamConfig> teamConfigs = SystemAPI.GetSingletonBuffer<TeamConfig>();
                 DynamicBuffer<TeamManagerReference> teamManagerReferences =
                     state.EntityManager.GetBuffer<TeamManagerReference>(teamManagerReferencesSingletonEntity);
@@ -161,11 +150,9 @@ namespace Galaxy
                 teamManager.ThrusterColor = teamConfigs[i].Color.xyz * config.ThrusterEmissionPower;
                 teamManager.LaserSparksColor = teamConfigs[i].Color.xyz * config.LaserSparksEmissionPower;
                 state.EntityManager.SetComponentData<TeamManager>(teamManagerEntity, teamManager);
-                
-                // Set team
+
                 GameUtilities.SetTeam(state.EntityManager, teamManagerEntity, i);
 
-                // spawn home planet
                 {
                     Entity planetEntity = CreatePlanet(
                         ref state,
@@ -417,7 +404,6 @@ namespace Galaxy
                         Radius = otherTransform.Scale * 0.5f
                     };
 
-                    // Add in sorted order for both planets
                     AddPlanetNetworkSorted(ref planetNewtorkBuffer, otherElement,
                         config.PlanetsNetworkCapacity);
                     sourceElement.Distance = otherElement.Distance;
@@ -441,7 +427,6 @@ namespace Galaxy
         {
             Entity planetEntity = state.EntityManager.Instantiate(config.PlanetPrefab);
 
-            // set size, position, and stats
             state.EntityManager.SetComponentData(planetEntity, new LocalTransform
             {
                 Position = position,
@@ -454,7 +439,6 @@ namespace Galaxy
             {
                 bool3 hasResources = random.NextFloat3(new float3(1f)) <= config.ResourceGenerationProbabilities;
 
-                // Make sure the planet has at least one resource type
                 if (!math.any(hasResources))
                 {
                     int randomResourceType = random.NextInt(0, 3);
@@ -497,7 +481,6 @@ namespace Galaxy
         private static void AddPlanetNetworkSorted(ref DynamicBuffer<PlanetNetwork> planetsBuffer,
             PlanetNetwork element, int maxLength)
         {
-            // early exit if entity is already there
             for (int p = 0; p < planetsBuffer.Length; p++)
             {
                 if (planetsBuffer[p].Entity == element.Entity)
@@ -506,7 +489,6 @@ namespace Galaxy
                 }
             }
 
-            // Insert in sorted order of closest planet first
             bool insertedElement = false;
             for (int p = 0; p < planetsBuffer.Length; p++)
             {
@@ -523,7 +505,6 @@ namespace Galaxy
                 planetsBuffer.Add(element);
             }
 
-            // Trim length
             if (planetsBuffer.Length > maxLength)
             {
                 planetsBuffer.Resize(maxLength, NativeArrayOptions.ClearMemory);

@@ -103,9 +103,7 @@ namespace Galaxy
                 TeamManagerReferenceLookup = SystemAPI.GetBufferLookup<TeamManagerReference>(true),
             };
             state.Dependency = traderAIJob.ScheduleParallel(state.Dependency);
-            
-            // We schedule all the single-thread jobs last
-            
+
             FighterExecuteAttackJob executeAttackJob = new FighterExecuteAttackJob
             {
                 LaserPrefab = config.LaserPrefab,
@@ -182,7 +180,6 @@ namespace Galaxy
             [ReadOnly] public ComponentLookup<PlanetNavigationGrid> PlanetNavigationGridLookup;
             [ReadOnly] public BufferLookup<PlanetNavigationCell> PlanetNavigationCellsBufferLookup;
 
-            // Cached data for the lifetime of the job
             private PlanetNavigationGrid _cachedGrid; 
             private UnsafeList<PlanetNavigationCell> _cachedCellsBuffer;
 
@@ -190,17 +187,14 @@ namespace Galaxy
             {
                 ShipData shipData = ship.ShipData.Value;
 
-                // Handle movement/velocity towards target
                 if(ship.BlockNavigation == 0 && ship.NavigationTargetEntity != Entity.Null)
                 {
                     float3 vectorToTarget = ship.NavigationTargetPosition - transform.Position;
 
-                    // Steering / Rotation
                     quaternion targetRot = quaternion.LookRotationSafe(vectorToTarget, math.up());
                     transform.Rotation = math.slerp(transform.Rotation, targetRot,
                         MathUtilities.GetSharpnessInterpolant(shipData.SteeringSharpness, DeltaTime));
 
-                    // Acceleration
                     float trueAcceleration = shipData.Acceleration * ship.AccelerationMultiplier;
                     float trueMaxSpeed = shipData.MaxSpeed * ship.MaxSpeedMultiplier;
                     float3 forward = math.mul(transform.Rotation, math.forward());
@@ -209,18 +203,15 @@ namespace Galaxy
                     ship.Velocity = MathUtilities.ClampToMaxLength(ship.Velocity, trueMaxSpeed);
                 }
 
-                // Planet avoidance
                 if (PlanetNavigationGridUtility.GetCellDataAtPosition(in _cachedGrid, in _cachedCellsBuffer,
                         transform.Position, out PlanetNavigationCell closestPlanetData))
                 {
                     float distanceSqToPlanet = math.lengthsq(closestPlanetData.Position - transform.Position);
-                    
-                    // If closest planet is roughly within some distance threshold, start handling avoidance
+
                     if (distanceSqToPlanet < shipData.PlanetAvoidanceDistance * shipData.PlanetAvoidanceDistance)
                     {
                         float3 shipToPlanet = closestPlanetData.Position - transform.Position;
-                        
-                        // Hard collision
+
                         if (math.lengthsq(shipToPlanet) <=
                             closestPlanetData.Radius * closestPlanetData.Radius)
                         {
@@ -229,7 +220,6 @@ namespace Galaxy
                             transform.Position = closestPlanetData.Position +
                                                  (-shipToPlanetDir * closestPlanetData.Radius);
                         }
-                        // Avoidance
                         else if (ship.IgnoreAvoidance == 0)
                         {
                             if (closestPlanetData.Entity != ship.NavigationTargetEntity ||
@@ -264,14 +254,12 @@ namespace Galaxy
                     }
                 }
 
-                // Apply velocity as movement
                 transform.Position += ship.Velocity * DeltaTime;
             }
 
             public unsafe bool OnChunkBegin(in ArchetypeChunk chunk, int unfilteredChunkIndex, bool useEnabledMask,
                 in v128 chunkEnabledMask)
             {
-                // Get the planet navigation data only once, and cache it
                 if (!_cachedCellsBuffer.IsCreated)
                 {
                     _cachedGrid = PlanetNavigationGridLookup[PlanetGridEntity];
@@ -301,7 +289,6 @@ namespace Galaxy
             public Entity TeamManagerReferencesEntity;
             [ReadOnly] public BufferLookup<TeamManagerReference> TeamManagerReferenceLookup;
 
-            // Cached data for the lifetime of the job
             private UnsafeList<float> _tmpFinalImportances;
             private UnsafeList<UnsafeList<FighterAction>> _cachedFighterActions;
 
@@ -312,34 +299,28 @@ namespace Galaxy
                     FighterData fighterData = fighter.FighterData.Value;
 
                     ship.IgnoreAvoidance = 0;
-                    
-                    // Update attack timer
+
                     if (fighter.AttackTimer > 0f)
                     {
                         fighter.AttackTimer -= DeltaTime;
                     }
-                    
-                    // Handle chasing and attacking target
+
                     if (fighter.TargetIsEnemyShip == 1)
                     {
                         if (LocalToWorldLookup.TryGetComponent(ship.NavigationTargetEntity, out LocalToWorld targetLtW))
                         {
-                            // Target too far
                             float targetDistanceSq = math.distancesq(targetLtW.Position, transform.Position);
                             if (targetDistanceSq > fighterData.AttackRange * fighterData.AttackRange)
                             {
                                 fighter.TargetIsEnemyShip = 0;
                                 ship.NavigationTargetEntity = Entity.Null;
                             }
-                            // Target in range
                             else
                             {
                                 ship.IgnoreAvoidance = 1;
-                                
-                                // Update navigation target
+
                                 ship.NavigationTargetPosition = targetLtW.Position;
-                                
-                                // Update when to fire
+
                                 if (fighter.AttackTimer <= 0f)
                                 {
                                     float3 shipToTarget = targetLtW.Position - transform.Position;
@@ -350,13 +331,11 @@ namespace Galaxy
                                         math.dot(shipForward, shipToTargetDir) > fighterData.DotProdThresholdForTargetInSights;
                                     if (activeAttackTargetInSights)
                                     {
-                                        // Remember to execute the attack this frame
                                         executeAttack.ValueRW = true;
                                     }
                                 }
                             }
                         }
-                        // Target doesn't exist anymore
                         else
                         {
                             fighter.TargetIsEnemyShip = 0;
@@ -365,7 +344,6 @@ namespace Galaxy
                     }
                     else
                     {
-                        // Detect enemies to attack
                         fighter.DetectionTimer -= DeltaTime;
                         if (fighter.DetectionTimer <= 0f && fighterData.DetectionRange > 0f)
                         {
@@ -381,11 +359,9 @@ namespace Galaxy
 
                             fighter.DetectionTimer += fighterData.ShipDetectionInterval;
                         }
-                        
-                        // Choose a target planet to go to
+
                         if (fighter.TargetIsEnemyShip == 0)
                         {
-                            // Get or cache this team's fighterActions
                             UnsafeList<FighterAction> fighterActionsList = _cachedFighterActions[team.Index];
                             if (fighterActionsList.IsCreated)
                             {
@@ -407,32 +383,26 @@ namespace Galaxy
 
                                     _tmpFinalImportances.Add(finalImportance);
                                     importancesTotal += finalImportance;
-                                    
-                                    // Try find the current action's new importance
+
                                     if (currentActionImportance < 0f && fighterActions.Entity == ship.NavigationTargetEntity)
                                     {
                                         currentActionImportance = fighterActions.Importance;
                                     }
                                 }
 
-                                // If couldn't find current action, clear data
                                 if (currentActionImportance < 0f)
                                 {
                                     ship.NavigationTargetEntity = Entity.Null;
                                 }
-                                
-                                // Get a random that is unique to this combo of entities, so AI decisions have some
-                                // stability from frame to frame
+
                                 Random persistentRandom = GameUtilities.GetDeterministicRandom(entity.Index);
 
-                                // Pick planet based on weighted random
                                 int weightedRandomIndex = GameUtilities.GetWeightedRandomIndex(importancesTotal,
                                     in _tmpFinalImportances, ref persistentRandom);
                                 if (weightedRandomIndex >= 0)
                                 {
                                     FighterAction fighterAction = fighterActionsList[weightedRandomIndex];
 
-                                    // Only pick a different action if the new action is significantly more important
                                     if (_tmpFinalImportances[weightedRandomIndex] > currentActionImportance * 2f)
                                     {
                                         ship.NavigationTargetEntity = fighterAction.Entity;
@@ -455,7 +425,6 @@ namespace Galaxy
                     _tmpFinalImportances = new UnsafeList<float>(256, Allocator.Temp);
                 }
 
-                // This caches a readonly version of the Actions buffer for each team, for fast access
                 if (!_cachedFighterActions.IsCreated)
                 {
                     DynamicBuffer<TeamManagerReference> teamManagerReferences =
@@ -471,8 +440,7 @@ namespace Galaxy
                         {
                             _cachedFighterActions[teamIndex] = new UnsafeList<FighterAction>(
                                 (FighterAction*)fighterActionsBuffer.GetUnsafeReadOnlyPtr(), fighterActionsBuffer.Length);
-                                    
-                            // Make sure finalImportances can accomodate highest capacity
+
                             if (fighterActionsBuffer.Length > _tmpFinalImportances.Capacity)
                             {
                                 _tmpFinalImportances.SetCapacity(fighterActionsBuffer.Length);
@@ -499,8 +467,7 @@ namespace Galaxy
             [ReadOnly] public ComponentLookup<Team> TeamLookup;
             public Entity TeamManagerReferencesEntity;
             [ReadOnly] public BufferLookup<TeamManagerReference> TeamManagerReferenceLookup;
-            
-            // Cached data for the lifetime of the job
+
             private UnsafeList<float> _tmpFinalImportances;
             private UnsafeList<UnsafeList<WorkerAction>> _cachedWorkerActions;
 
@@ -513,11 +480,9 @@ namespace Galaxy
                 if (team.IsNonNeutral())
                 {
                     WorkerData workerData = worker.WorkerData.Value;
-                    
-                    // Handle reaching targets
+
                     if (ship.NavigationTargetEntity != Entity.Null)
                     {
-                        // Construct building
                         if (worker.DesiredBuildingPrefab != Entity.Null)
                         {
                             float requiredRange = workerData.BuildRange + ship.NavigationTargetRadius;
@@ -526,14 +491,12 @@ namespace Galaxy
                                 executeBuild.ValueRW = true;
                             }
                         }
-                        // Capture planet
                         else
                         {
                             float requiredRange = workerData.CaptureRange + ship.NavigationTargetRadius;
                             if (math.distancesq(transform.Position, ship.NavigationTargetPosition) <
                                 requiredRange * requiredRange)
                             {
-                                // Only capture if it's not already captured
                                 if (TeamLookup[ship.NavigationTargetEntity].Index != team.Index)
                                 {
                                     executePlanetCapture.ValueRW = true;
@@ -542,14 +505,12 @@ namespace Galaxy
                         }
                     }
 
-                    // Choose an action (capture planet, construct building)
                     UnsafeList<WorkerAction> workerActionsBuffer = _cachedWorkerActions[team.Index];
                     if (workerActionsBuffer.IsCreated)
                     {
                         ShipData shipData = ship.ShipData.Value;
                         Random persistentRandom = GameUtilities.GetDeterministicRandom(entity.Index);
 
-                        // Clear data
                         _tmpFinalImportances.Clear();
                         float importancesTotal = 0f;
                         float currentActionImportance = -1f;
@@ -565,15 +526,13 @@ namespace Galaxy
 
                             _tmpFinalImportances.Add(finalImportance);
                             importancesTotal += finalImportance;
-                                    
-                            // Try find the current action's new importance
+
                             if (currentActionImportance < 0f && workerAction.Entity == ship.NavigationTargetEntity)
                             {
                                 currentActionImportance = workerAction.Importance;
                             }
                         }
 
-                        // If couldn't find current action, clear data
                         if (currentActionImportance < 0f)
                         {
                             worker.DesiredBuildingPrefab = Entity.Null;
@@ -586,14 +545,12 @@ namespace Galaxy
                         {
                             WorkerAction workerAction = workerActionsBuffer[weightedRandomIndex];
 
-                            // Only pick a different action if the new action is significantly more important
                             if (_tmpFinalImportances[weightedRandomIndex] > currentActionImportance * 2f)
                             {
                                 ship.NavigationTargetEntity = workerAction.Entity;
                                 ship.NavigationTargetPosition = workerAction.Position;
                                 ship.NavigationTargetRadius = workerAction.PlanetRadius;
 
-                                // Build action
                                 if (workerAction.Type == 1)
                                 {
                                     worker.DesiredBuildingPrefab = workerAction.BuildingPrefab;
@@ -612,7 +569,6 @@ namespace Galaxy
                     _tmpFinalImportances = new UnsafeList<float>(64, Allocator.Temp);
                 }
 
-                // This caches a readonly version of the Actions buffer for each team, for fast access
                 if (!_cachedWorkerActions.IsCreated)
                 {
                     DynamicBuffer<TeamManagerReference> teamManagerReferences =
@@ -628,8 +584,7 @@ namespace Galaxy
                         {
                             _cachedWorkerActions[teamIndex] = new UnsafeList<WorkerAction>(
                                 (WorkerAction*)workerActionsBuffer.GetUnsafeReadOnlyPtr(), workerActionsBuffer.Length);
-                                    
-                            // Make sure finalImportances can accomodate highest capacity
+
                             if (workerActionsBuffer.Length > _tmpFinalImportances.Capacity)
                             {
                                 _tmpFinalImportances.SetCapacity(workerActionsBuffer.Length);
@@ -690,7 +645,6 @@ namespace Galaxy
                 
                 if (MoonLookup.TryGetComponent(ship.NavigationTargetEntity, out Moon moon))
                 {
-                    // Detect starting a new construction
                     if (moon.BuiltPrefab == Entity.Null)
                     {
                         moon.BuiltPrefab = worker.DesiredBuildingPrefab;
@@ -716,7 +670,6 @@ namespace Galaxy
             public Entity TeamManagerReferencesEntity;
             [ReadOnly] public BufferLookup<TeamManagerReference> TeamManagerReferenceLookup;
 
-            // Cached data for the lifetime of the job
             private UnsafeList<float3> _tmpFinalImportancesVector;
             private UnsafeList<float> _tmpFinalImportances;
             private UnsafeList<UnsafeList<TraderAction>> _cachedTraderActions;
@@ -728,10 +681,9 @@ namespace Galaxy
                 {
                     TraderData traderData = trader.TraderData.Value;
 
-                    // Idle
                     if (ship.NavigationTargetEntity == Entity.Null)
                     {
-                        ship.Velocity = float3.zero; // TODO;
+                        ship.Velocity = float3.zero;
                         ship.BlockNavigation = 1;
 
                         FindNewTradeRoute(entity, team, ref trader, ref ship);
@@ -741,16 +693,12 @@ namespace Galaxy
                         ship.BlockNavigation = 0;
                         Team activePlanetTeam = TeamLookup[ship.NavigationTargetEntity];
 
-                        // Handle team changes mid-trade
                         if (activePlanetTeam.Index != team.Index)
                         {
-                            // If going to receiving planet and its team changes, just offload resources at nearest
-                            // planet
                             if (ship.NavigationTargetEntity == trader.ReceivingPlanetEntity)
                             {
                                 SetNearestPlanetAsActiveAndReceiving(team, ref trader, ref ship, in transform);
                             }
-                            // If going to giving planet and its team changes, cancel current trade
                             else
                             {
                                 ResetTrade(ref ship, ref trader);
@@ -758,7 +706,6 @@ namespace Galaxy
                         }
                         else if (PlanetLookup.TryGetComponent(ship.NavigationTargetEntity, out Planet planet))
                         {
-                            // Detect reaching planet
                             float requiredRange = traderData.ResourceExchangeRange + ship.NavigationTargetRadius;
                             if (math.distancesq(transform.Position, ship.NavigationTargetPosition) <=
                                 requiredRange * requiredRange)
@@ -774,7 +721,6 @@ namespace Galaxy
             {
                 Random persistentRandom = GameUtilities.GetDeterministicRandom(entity.Index, trader.FindTradeRouteAttempts);
 
-                // Get this ship's team manager data
                 UnsafeList<TraderAction> traderActionsBuffer = _cachedTraderActions[team.Index];
                 if (traderActionsBuffer.IsCreated)
                 {
@@ -782,7 +728,6 @@ namespace Galaxy
 
                     float3 receivingPlanetStorageRatioPercentile = float3.zero;
 
-                    // Find receiving planet
                     {
                         _tmpFinalImportancesVector.Clear();
                         float3 importancesTotalVector = 0f;
@@ -791,8 +736,6 @@ namespace Galaxy
                         {
                             TraderAction traderAction = traderActionsBuffer[i];
 
-                            // Determine a resource need importance based on how this planet's resource storage compares
-                            // to the best storages among the planets we have
                             float3 resourceNeedImportance =
                                 math.saturate(new float3(1f) - traderAction.ResourceStorageRatioPercentile);
                             float3 finalImportance = traderAction.ImportanceBias * resourceNeedImportance;
@@ -801,7 +744,6 @@ namespace Galaxy
                             importancesTotalVector += finalImportance;
                         }
 
-                        // Pick a receiving planet based on weighted random of needs
                         int weightedRandomIndex = GameUtilities.GetWeightedRandomIndex(importancesTotalVector,
                             in _tmpFinalImportancesVector, ref persistentRandom, out int subIndex);
                         if (weightedRandomIndex >= 0)
@@ -828,7 +770,6 @@ namespace Galaxy
                         }
                     }
 
-                    // Find giving planet
                     {
                         _tmpFinalImportances.Clear();
                         float importancesTotal = 0f;
@@ -840,8 +781,6 @@ namespace Galaxy
                         {
                             TraderAction traderAction = traderActionsBuffer[i];
 
-                            // Only consider planets that have a greater storage ratio for the chosen resource than the
-                            // receiving planet
                             float finalImportance = 0f;
                             float giverStorageRatio = math.csum(trader.ChosenResourceMask *
                                                            traderAction.ResourceStorageRatioPercentile);
@@ -855,7 +794,6 @@ namespace Galaxy
                             importancesTotal += finalImportance;
                         }
 
-                        // Pick random giving planet 
                         int weightedRandomIndex = GameUtilities.GetWeightedRandomIndex(importancesTotal,
                             in _tmpFinalImportances, ref persistentRandom);
                         if (weightedRandomIndex >= 0)
@@ -875,7 +813,6 @@ namespace Galaxy
 
             private void SetNearestPlanetAsActiveAndReceiving(Team team, ref Trader trader, ref Ship ship, in LocalTransform transform)
             {
-                // Get this ship's team manager data
                 if (TraderActionLookup.TryGetBuffer(team.ManagerEntity,
                         out DynamicBuffer<TraderAction> traderActionsBuffer))
                 {
@@ -939,7 +876,6 @@ namespace Galaxy
                     _tmpFinalImportances = new UnsafeList<float>(64, Allocator.Temp);
                 }
 
-                // This caches a readonly version of the Actions buffer for each team, for fast access
                 if (!_cachedTraderActions.IsCreated)
                 {
                     DynamicBuffer<TeamManagerReference> teamManagerReferences =
@@ -955,8 +891,7 @@ namespace Galaxy
                         {
                             _cachedTraderActions[teamIndex] = new UnsafeList<TraderAction>(
                                 (TraderAction*)traderActionsBuffer.GetUnsafeReadOnlyPtr(), traderActionsBuffer.Length);
-                                    
-                            // Make sure finalImportances can accomodate highest capacity
+
                             if (traderActionsBuffer.Length > _tmpFinalImportances.Capacity)
                             {
                                 _tmpFinalImportances.SetCapacity(traderActionsBuffer.Length);
@@ -994,10 +929,9 @@ namespace Galaxy
                 {
                     TraderData traderData = trader.TraderData.Value;
 
-                    // If arrived at receiving planet, offload carried resources and reset
                     if (ship.NavigationTargetEntity == trader.ReceivingPlanetEntity)
                     {
-                        ship.Velocity = float3.zero; // TODO;
+                        ship.Velocity = float3.zero;
                         ship.BlockNavigation = 1;
 
                         planet.ResourceCurrentStorage = math.clamp(
@@ -1008,10 +942,9 @@ namespace Galaxy
                         PlanetLookup[ship.NavigationTargetEntity] = planet;
                         ResetTrade(ref ship, ref trader);
                     }
-                    // If arrived at giving planet, take resources
                     else
                     {
-                        ship.Velocity = float3.zero; // TODO;
+                        ship.Velocity = float3.zero;
                         ship.BlockNavigation = 1;
 
                         float3 takenResources =
@@ -1074,11 +1007,9 @@ namespace Galaxy
 
                 if (TeamManagerLookup.TryGetComponent(team.ManagerEntity, out TeamManager teamManager))
                 {
-                    // Spawn laser
                     GameUtilities.SpawnLaser(ECB, LaserPrefab, teamManager.LaserColor, transform.Position, shipToTargetDir,
                         math.length(shipToTarget));
 
-                    // Hit sparks
                     HitSparksManager.AddRequest(new VFXHitSparksRequest
                     {
                         Position = ship.NavigationTargetPosition,

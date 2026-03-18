@@ -29,8 +29,7 @@ namespace Galaxy
                 NativeArray<Entity> spatialDatabaseEntities = _spatialDatabasesQuery.ToEntityArray(Allocator.Temp);
 
                 JobHandle initialDep = state.Dependency;
-                
-                // Clear each spatial database in a separate thread
+
                 for (int i = 0; i < spatialDatabaseEntities.Length; i++)
                 {
                     ClearSpatialDatabaseJob clearJob = new ClearSpatialDatabaseJob

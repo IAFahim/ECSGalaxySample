@@ -41,7 +41,6 @@ namespace Galaxy
 
                 if (laser.HasExistedOneFrame == 1)
                 {
-                    // Scaling
                     float lifetimeRatio = math.saturate(laser.LifetimeCounter / laser.MaxLifetime);
                     float originalScaleZ = postTransformMatrix.Value.Scale().z;
                     postTransformMatrix.Value = float4x4.Scale(lifetimeRatio, lifetimeRatio, originalScaleZ);

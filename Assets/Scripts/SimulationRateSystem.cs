@@ -14,8 +14,7 @@ namespace Galaxy
         {
             state.RequireForUpdate<SimulationRate>();
             SimulationSystemGroup simulationSystemGroup = state.World.GetExistingSystemManaged<SimulationSystemGroup>();
-            
-            // Checking whether the config prefab specifies a different frame rate for the simulation system group
+
             GameObject configGO = Resources.Load<GameObject>("Config");
             if (configGO != null)
             {
@@ -29,8 +28,7 @@ namespace Galaxy
                     simulationSystemGroup.RateManager = null;
                 }   
             }
-            
-            // For the sake of determinism with fixed rate catchup managers, don't set a MaximumDeltaTime
+
             simulationSystemGroup.World.MaximumDeltaTime = float.MaxValue;
         }
 
@@ -42,8 +40,7 @@ namespace Galaxy
             if (!_hadFirstTimeInit)
             {
                 const string _fixedRateArg = "-fixedRate:";
-                
-                // Read cmd line args
+
                 string[] args = System.Environment.GetCommandLineArgs();
                 for (int i = 0; i < args.Length; i++)
                 {

@@ -12,7 +12,6 @@ public static class UIEvents
     public static Action TogglePause;
     public static Action SimulateGame;
     public static Action<bool> IgnoreCameraInput;
-    
-    // Planet Stats
+
     public static Action<StatsData> UpdatePlanetSelection;
 }

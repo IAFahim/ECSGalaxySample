@@ -25,7 +25,6 @@ namespace Galaxy
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            // Collect input
             CameraInputs cameraInputs = new CameraInputs
             {
                 Move = new float3(
@@ -40,9 +39,8 @@ namespace Galaxy
                 SwitchMode = Input.GetKeyDown(KeyCode.Z),
             };
             cameraInputs.Move = math.normalizesafe(cameraInputs.Move) *
-                                math.saturate(math.length(cameraInputs.Move)); // Clamp move inputs magnitude to 1
+                                math.saturate(math.length(cameraInputs.Move));
 
-            // Camera target switching
             Entity nextTargetPlanet = Entity.Null;
             Entity nextTargetShip = Entity.Null;
             bool switchShip = Input.GetKeyDown(KeyCode.X);
@@ -94,7 +92,6 @@ namespace Galaxy
                 if (gameCamera.IgnoreInput)
                     return;
 
-                // Mode switch
                 if (CameraInputs.SwitchMode)
                 {
                     switch (gameCamera.CameraMode)
@@ -111,7 +108,6 @@ namespace Galaxy
                     }
                 }
 
-                // Target switch
                 if (NextTargetPlanet != Entity.Null)
                 {
                     switch (gameCamera.CameraMode)
@@ -129,24 +125,20 @@ namespace Galaxy
                 {
                     case GameCamera.Mode.Fly:
                     {
-                        // Yaw
                         float yawAngleChange = CameraInputs.Look.x * gameCamera.FlyRotationSpeed;
                         quaternion yawRotation = quaternion.Euler(math.up() * math.radians(yawAngleChange));
                         gameCamera.PlanarForward = math.mul(yawRotation, gameCamera.PlanarForward);
 
-                        // Pitch
                         gameCamera.PitchAngle += -CameraInputs.Look.y * gameCamera.FlyRotationSpeed;
                         gameCamera.PitchAngle = math.clamp(gameCamera.PitchAngle, gameCamera.MinVAngle,
                             gameCamera.MaxVAngle);
                         quaternion pitchRotation = quaternion.Euler(math.right() * math.radians(gameCamera.PitchAngle));
 
-                        // Final rotation
                         quaternion targetRotation =
                             math.mul(quaternion.LookRotationSafe(gameCamera.PlanarForward, math.up()), pitchRotation);
                         transform.Rotation = math.slerp(transform.Rotation, targetRotation,
                             MathUtilities.GetSharpnessInterpolant(gameCamera.FlyRotationSharpness, DeltaTime));
 
-                        // Move
                         float3 worldMoveInputs = math.rotate(transform.Rotation, CameraInputs.Move);
                         float finalMaxSpeed = gameCamera.FlyMaxMoveSpeed;
                         if (CameraInputs.Sprint)
@@ -164,33 +156,27 @@ namespace Galaxy
                     case GameCamera.Mode.OrbitPlanet:
                     case GameCamera.Mode.OrbitShip:
                     {
-                        // if there is a followed entity, place the camera relatively to it
                         if (LocalToWorldLookup.TryGetComponent(gameCamera.FollowedEntity, out LocalToWorld followedLTW))
                         {
-                            // Rotation
                             {
                                 transform.Rotation = quaternion.LookRotationSafe(gameCamera.PlanarForward, math.up());
 
-                                // Yaw
                                 float yawAngleChange = CameraInputs.Look.x * gameCamera.OrbitRotationSpeed;
                                 quaternion yawRotation = quaternion.Euler(math.up() * math.radians(yawAngleChange));
                                 gameCamera.PlanarForward = math.rotate(yawRotation, gameCamera.PlanarForward);
 
-                                // Pitch
                                 gameCamera.PitchAngle += -CameraInputs.Look.y * gameCamera.OrbitRotationSpeed;
                                 gameCamera.PitchAngle = math.clamp(gameCamera.PitchAngle, gameCamera.MinVAngle,
                                     gameCamera.MaxVAngle);
                                 quaternion pitchRotation =
                                     quaternion.Euler(math.right() * math.radians(gameCamera.PitchAngle));
 
-                                // Final rotation
                                 transform.Rotation = quaternion.LookRotationSafe(gameCamera.PlanarForward, math.up());
                                 transform.Rotation = math.mul(transform.Rotation, pitchRotation);
                             }
 
                             float3 cameraForward = math.mul(transform.Rotation, math.forward());
 
-                            // Distance input
                             float desiredDistanceMovementFromInput =
                                 CameraInputs.Zoom * gameCamera.OrbitDistanceMovementSpeed;
                             gameCamera.OrbitTargetDistance =
@@ -201,7 +187,6 @@ namespace Galaxy
                                 MathUtilities.GetSharpnessInterpolant(gameCamera.OrbitDistanceMovementSharpness,
                                     DeltaTime));
 
-                            // Calculate final camera position from targetposition + rotation + distance
                             transform.Position = followedLTW.Position +
                                                  (-cameraForward * gameCamera.CurrentDistanceFromMovement);
                         }
@@ -212,7 +197,6 @@ namespace Galaxy
                         break;
                 }
 
-                // Manually calculate the LocalToWorld since this is updating after the Transform systems, and the LtW is what rendering uses
                 LocalToWorld cameraLocalToWorld = new LocalToWorld();
                 cameraLocalToWorld.Value = new float4x4(transform.Rotation, transform.Position);
                 LocalToWorldLookup[entity] = cameraLocalToWorld;

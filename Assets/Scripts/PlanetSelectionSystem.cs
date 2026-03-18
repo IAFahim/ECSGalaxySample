@@ -25,7 +25,6 @@ namespace Galaxy
 
         public void OnUpdate(ref SystemState state)
         {
-            // TODO: Mobile support
             if (Cursor.visible && Input.GetMouseButton(0))
             {
                 Entity tempEntity = Entity.Null;
@@ -59,7 +58,6 @@ namespace Galaxy
                 m_SelectedPlanet = tempEntity;
             }
 
-            // Update selection
             if (m_SelectedPlanet == Entity.Null)
             {
                 UIEvents.UpdatePlanetSelection?.Invoke(new StatsData {Visible = false});

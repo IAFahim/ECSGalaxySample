@@ -25,7 +25,6 @@ public class AdvancedTeamStats
         m_RootElement = parentElement;
         SetVisualElements();
 
-        // Set Initial Data
         m_TeamColor.style.backgroundColor = teamColor;
         m_TeamNameLabel.text = teamName;
     }
@@ -131,11 +130,9 @@ public class GameStatsScreen : MonoBehaviour
 
     private void Update()
     {
-        // Don't update if collapsed
         if (m_Collapsed)
             return;
-        
-        // Framerate
+
         m_MaxFPSDeltaTime = math.max(m_MaxFPSDeltaTime, Time.deltaTime);
         m_AccumulatedFPSDeltaTimes += Time.deltaTime;
         m_AccumulatedFPSFrames++;
@@ -152,7 +149,6 @@ public class GameStatsScreen : MonoBehaviour
         m_FPSAvgLabel.text = $"{1f / m_DeltaAvg:0} ({m_DeltaAvg * 1000f:0.0}ms)";
         m_FPSWorstLabel.text = $"{1f / m_DeltaWorst:0} ({m_DeltaWorst * 1000f:0.0}ms)";
 
-        // Ship count
         World world = World.DefaultGameObjectInjectionWorld;
         EntityManager entityManager = world.EntityManager;
         entityManager.CompleteAllTrackedJobs();
@@ -181,7 +177,6 @@ public class GameStatsScreen : MonoBehaviour
 
             Color teamColor = new Color(teamManager.Color.x, teamManager.Color.y, teamManager.Color.z, 1f);
 
-            // Check if team stats already exist
             if (!m_AdvancedTeamStatsDictionary.TryGetValue(team.Index, out AdvancedTeamStats advancedTeamStats))
             {
                 var container = m_AdvancedTeamStatsTemplate.CloneTree();

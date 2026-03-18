@@ -115,13 +115,10 @@ public struct AIProcessor
         {
             AIAction aiAction = _actions[i];
 
-            // Actions with no considerations are worth zero
             if (aiAction.ConsiderationsCount == 0)
             {
                 aiAction.Importance = 0f;
             }
-            // For actions with fewer considerations than the action with the most considerations, apply
-            // importance compensation
             else if (aiAction.ConsiderationsCount < _highestConsiderationsCount)
             {
                 int considerationsDiff = _highestConsiderationsCount - aiAction.ConsiderationsCount;

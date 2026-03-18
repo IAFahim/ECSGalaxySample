@@ -22,10 +22,9 @@ public interface ISpatialQueryCollector
 [StructLayout(LayoutKind.Explicit)]
 public struct SpatialDatabaseCell : IBufferElementData
 {
-    // The elements count must be the first element at fieldoffset 0, because we try to obtain a ptr to it in
-    // some other parts of the code
     [FieldOffset(0)]
-    public int UncappedElementsCount; // May overflow capacity, may be negative if cell elements are invalidated
+    public int UncappedElementsCount;
+
     [FieldOffset(4)]
     public int StartIndex;
     [FieldOffset(8)]
@@ -153,20 +152,16 @@ public struct SpatialDatabase : IComponentData
         ref SpatialDatabase spatialDatabase, ref DynamicBuffer<SpatialDatabaseCell> cellsBuffer,
         ref DynamicBuffer<SpatialDatabaseElement> storageBuffer)
     {
-        // Clear
         cellsBuffer.Clear();
         storageBuffer.Clear();
         cellsBuffer.Capacity = 16;
         storageBuffer.Capacity = 16;
 
-        // Init grid
         spatialDatabase.Grid = new UniformOriginGrid(halfExtents, subdivisions);
 
-        // Reallocate
         cellsBuffer.Resize(spatialDatabase.Grid.CellCount, NativeArrayOptions.ClearMemory);
         storageBuffer.Resize(spatialDatabase.Grid.CellCount * cellEntriesCapacity, NativeArrayOptions.ClearMemory);
 
-        // Init cells data
         for (int i = 0; i < cellsBuffer.Length; i++)
         {
             SpatialDatabaseCell cell = cellsBuffer[i];
@@ -186,13 +181,11 @@ public struct SpatialDatabase : IComponentData
             SpatialDatabaseCell cell = cellsBuffer[i];
             cell.StartIndex = totalDesiredStorage;
 
-            // Handle calculating an increased max storage for this cell
             cell.ElementsCapacity = math.select(cell.ElementsCapacity,
                 (int)math.ceil((cell.ElementsCapacity + cell.GetExcessElementsCount()) * ElementsCapacityGrowFactor),
                 cell.GetExcessElementsCount() > 0);
             totalDesiredStorage += cell.ElementsCapacity;
 
-            // Reset storage
             cell.UncappedElementsCount = 0;
 
             cellsBuffer[i] = cell;
@@ -214,8 +207,7 @@ public struct SpatialDatabase : IComponentData
 
             int addIndex = cellRef.UncappedElementsCount;
             cellRef.UncappedElementsCount++;
-            
-            // Add entry at cell index only if within capacity
+
             if (addIndex < cellRef.ElementsCapacity)
             {
                 storageBuffer[cellRef.StartIndex + addIndex] = element;
@@ -232,11 +224,9 @@ public struct SpatialDatabase : IComponentData
         if (cellIndex >= 0)
         {
             SpatialDatabaseCell* cellPtr = cellsBuffer.Ptr + (long)cellIndex;
-            
-            // This line assumes that the "elementsCount" of the cell is at FieldOffset(0) in the cell struct
+
             int addIndex = Interlocked.Increment(ref UnsafeUtility.AsRef<int>(cellPtr)) - 1;
-            
-            // Add entry at cell index only if within capacity
+
             if (addIndex < cellPtr->ElementsCapacity)
             {
                 storageBuffer[cellPtr->StartIndex + addIndex] = element;
@@ -324,7 +314,6 @@ public struct SpatialDatabase : IComponentData
             int maxLayer = math.max(highestCoordDistances.x,
                 math.max(highestCoordDistances.y, highestCoordDistances.z));
 
-            // Iterate layers of cells around the original cell
             for (int l = 0; l <= maxLayer; l++)
             {
                 int2 yRange = new int2(sourceCoord.y - l, sourceCoord.y + l);
@@ -333,9 +322,8 @@ public struct SpatialDatabase : IComponentData
 
                 for (int y = yRange.x; y <= yRange.y; y++)
                 {
-                    int yDistToEdge = math.min(y - minCoords.y, maxCoords.y - y); // positive is inside
+                    int yDistToEdge = math.min(y - minCoords.y, maxCoords.y - y);
 
-                    // Skip coords outside of query coords range
                     if (yDistToEdge < 0)
                     {
                         continue;
@@ -343,9 +331,8 @@ public struct SpatialDatabase : IComponentData
 
                     for (int z = zRange.x; z <= zRange.y; z++)
                     {
-                        int zDistToEdge = math.min(z - minCoords.z, maxCoords.z - z); // positive is inside
+                        int zDistToEdge = math.min(z - minCoords.z, maxCoords.z - z);
 
-                        // Skip coords outside of query coords range
                         if (zDistToEdge < 0)
                         {
                             continue;
@@ -353,9 +340,8 @@ public struct SpatialDatabase : IComponentData
 
                         for (int x = xRange.x; x <= xRange.y; x++)
                         {
-                            int xDistToEdge = math.min(x - minCoords.x, maxCoords.x - x); // positive is inside
+                            int xDistToEdge = math.min(x - minCoords.x, maxCoords.x - x);
 
-                            // Skip coords outside of query coords range
                             if (xDistToEdge < 0)
                             {
                                 continue;
@@ -366,7 +352,6 @@ public struct SpatialDatabase : IComponentData
                             int maxCoordsDist = math.max(coordDistToCenter.x,
                                 math.max(coordDistToCenter.y, coordDistToCenter.z));
 
-                            // Skip all inner coords not belonging to the external layer
                             if (maxCoordsDist != l)
                             {
                                 x = xRange.y - 1;

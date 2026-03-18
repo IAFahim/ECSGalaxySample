@@ -87,19 +87,16 @@ namespace Galaxy
                 ref DynamicBuffer<PlanetShipsAssessment> shipsAssessmentBuffer,
                 in DynamicBuffer<PlanetNetwork> planetNetworkBuffer)
             {
-                // Ships assessment
                 planet.ShipsAssessmentCounter -= math.min(TotalPlanetsCount, PlanetShipsAssessmentsPerUpdate);
                 if (planet.ShipsAssessmentCounter < 0)
                 {
                     planet.ShipsAssessmentCounter += TotalPlanetsCount;
 
-                    // Clear assessment buffer
                     for (int i = 0; i < shipsAssessmentBuffer.Length; i++)
                     {
                         shipsAssessmentBuffer[i] = default;
                     }
 
-                    // Query allied and enemy ships count
                     PlanetAssessmentCollector collector = new PlanetAssessmentCollector(team.Index, shipsAssessmentBuffer);
                     SpatialDatabase.QueryAABB(in CachedSpatialDatabase._SpatialDatabase,
                         in CachedSpatialDatabase._SpatialDatabaseCells, in CachedSpatialDatabase._SpatialDatabaseElements,
@@ -131,11 +128,9 @@ namespace Galaxy
             
             void Execute(Entity entity, ref Planet planet, in Team team, ref DynamicBuffer<CapturingWorker> capturingWorkers, in DynamicBuffer<MoonReference> moonReferences)
             {
-                // Determine the majority team using CapturingWorker array
                 int majorityTeamIndex = -1;
                 float majorityTeamSpeed = 0;
-                
-                // Determine the majority team using capturingWorkers array
+
                 for (int i = 0; i < capturingWorkers.Length; i++)
                 {
                     CapturingWorker capturingWorker = capturingWorkers[i];
@@ -146,14 +141,12 @@ namespace Galaxy
                     }
                 }
 
-                // Reset conversion when there's a team change, or no unique team
                 if (majorityTeamIndex < 0 || majorityTeamIndex != planet.LastConvertingTeam)
                 {
                     planet.LastConvertingTeam = -1;
                     planet.CaptureProgress = 0;
                 }
-                
-                // Handle conversion if there's a single team holds majority long enough
+
                 if (majorityTeamIndex >= 0)
                 {
                     planet.LastConvertingTeam = majorityTeamIndex;
@@ -163,8 +156,7 @@ namespace Galaxy
                     {
                         planet.CaptureProgress = 0;
                         GameUtilities.SetTeam(ECB, entity, planet.LastConvertingTeam);
-                        
-                        // Convert buildings
+
                         for (int i = 0; i < moonReferences.Length; i++)
                         {
                             Entity moonEntity = moonReferences[i].Entity;
@@ -177,7 +169,6 @@ namespace Galaxy
                     }
                 }
 
-                // Clear capturingWorkers buffer
                 for (int i = 0; i < capturingWorkers.Length; i++)
                 {
                     capturingWorkers[i] = default;

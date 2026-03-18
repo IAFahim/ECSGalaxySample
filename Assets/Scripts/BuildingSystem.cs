@@ -147,16 +147,13 @@ namespace Galaxy
             {
                 Team team = TeamLookup[moon.PlanetEntity];
 
-                // Clear build if team change
                 if (team.Index != moon.PreviousTeam.Index)
                 {
                     ClearBuild(ref moon);
                 }
-                
-                // Handle construction
+
                 if (moon.BuiltPrefab != Entity.Null)
                 {
-                    // Clear build if there's already a building there
                     if (buildingReference.BuildingEntity != Entity.Null)
                     {
                         ClearBuild(ref moon);
@@ -183,7 +180,6 @@ namespace Galaxy
                     ClearBuild(ref moon);
                 }
 
-                // Clear workers speed
                 moon.CummulativeBuildSpeed = 0f;
 
                 moon.PreviousTeam = team;
@@ -211,33 +207,27 @@ namespace Galaxy
             private void Execute(Entity entity, ref Turret turret, ref LocalTransform localTransform, in Team team, in LocalToWorld turretLTW)
             {
                 TurretData turretData = turret.TurretData.Value;
-                
-                // Check if target still exists
+
                 if (turret.ActiveTarget != Entity.Null)
                 {
                     if (LocalToWorldLookup.TryGetComponent(turret.ActiveTarget, out LocalToWorld activeTargetLTW))
                     {
-                        // Check if target in range
                         float targetDistance = math.distance(turretLTW.Position, activeTargetLTW.Position);
                         if (targetDistance > turretData.AttackRange)
                         {
-                            // Disengage
                             turret.ActiveTarget = Entity.Null;
                         }
                         else
                         {
-                            // Store new position
                             turret.ActiveTargetPosition = activeTargetLTW.Position;
                         }
                     }
                     else
                     {
-                        // Disengage
                         turret.ActiveTarget = Entity.Null;
                     }
                 }
-                
-                // Detect enemies to attack
+
                 if (team.IsNonNeutral())
                 {
                     turret.DetectionTimer -= DeltaTime;
@@ -259,7 +249,6 @@ namespace Galaxy
                     }
                 }
 
-                // Attack timer
                 if (turret.AttackTimer > 0f)
                 {
                     turret.AttackTimer -= DeltaTime;
@@ -267,7 +256,6 @@ namespace Galaxy
                 
                 if (turret.ActiveTarget != Entity.Null)
                 {
-                    // Rotate towards target
                     quaternion turretWorldRotation = turretLTW.Rotation;
                     float3 directionToTarget = math.normalizesafe(turret.ActiveTargetPosition - turretLTW.Position);
                     quaternion rotationToTarget = quaternion.LookRotationSafe(directionToTarget, math.up());
@@ -276,8 +264,7 @@ namespace Galaxy
                     MathUtilities.GetLocalRotationForWorldRotation(entity, out quaternion selfLocalRotation,
                         turretWorldRotation, ref LocalToWorldLookup, ref ParentLookup);
                     localTransform.Rotation = selfLocalRotation;
-                    
-                    // Update attack
+
                     if (turret.AttackTimer <= 0f)
                     {
                         turret.MustAttack = 1;
@@ -328,7 +315,7 @@ namespace Galaxy
                     }
                     else
                     {
-                        canFire = true; // true by default for turrets on ships
+                        canFire = true;
                     }
 
                     if (canFire)
@@ -347,12 +334,10 @@ namespace Galaxy
 
                         if (TeamManagerLookup.TryGetComponent(team.ManagerEntity, out TeamManager teamManager))
                         {
-                            // Spawn laser
                             GameUtilities.SpawnLaser(ECB, LaserPrefab, teamManager.LaserColor, ltw.Position,
                                 selfToTargetDir,
                                 math.length(selfToTarget));
 
-                            // Hit sparks
                             HitSparksManager.AddRequest(new VFXHitSparksRequest
                             {
                                 Position = turret.ActiveTargetPosition,
@@ -382,7 +367,6 @@ namespace Galaxy
                     float3 consumedResources = researchData.ResourcesConsumptionRate * DeltaTime;
                     if (GameUtilities.TryConsumeResources(consumedResources, ref planet))
                     {
-                        // Apply bonuses
                         planet.ResearchBonuses.Add(researchData.ResearchBonuses);
                     }
                 }
@@ -417,7 +401,6 @@ namespace Galaxy
                 if (PlanetLookup.TryGetComponent(building.PlanetEntity,
                         out Planet planet))
                 {
-                    // Try start next production
                     if (factory.CurrentProducedPrefab == Entity.Null)
                     {
                         TryStartNewProduction(ref building, ref factory, ref planet, in team);
@@ -425,21 +408,17 @@ namespace Galaxy
 
                     if (factory.ProductionTimer > 0f)
                     {
-                        // Update production time
                         factory.ProductionTimer -= DeltaTime;
                     }
 
-                    // Update production
                     while (factory.ProductionTimer <= 0f && factory.CurrentProducedPrefab != Entity.Null)
                     {
                         float3 worldPosition = LocalToWorldLookup[building.MoonEntity].Position;
 
-                        // Create produced entity
                         Entity producedEntity = ECB.Instantiate(factory.CurrentProducedPrefab);
                         ECB.SetComponent(producedEntity, LocalTransform.FromPosition(worldPosition));
                         GameUtilities.SetTeam(ECB, producedEntity, team.Index);
 
-                        // Apply research bonuses
                         if (HealthLookup.TryGetComponent(factory.CurrentProducedPrefab, out Health producedHealth))
                         {
                             producedHealth.MaxHealth *= factory.ProductionResearchBonuses.ShipMaxHealthMultiplier;
@@ -469,7 +448,6 @@ namespace Galaxy
                         TryStartNewProduction(ref building, ref factory, ref planet, in team);
                     }
 
-                    // Write back to planet for resources
                     PlanetLookup[building.PlanetEntity] = planet;
                 }
             }
@@ -487,7 +465,6 @@ namespace Galaxy
                     }
                 }
 
-                // Pick a ship based on a weighted random
                 if(team.IsNonNeutral())
                 {
                     if (FactoryActionsLookup.TryGetBuffer(team.ManagerEntity,
@@ -500,7 +477,6 @@ namespace Galaxy
                         {
                             FactoryAction action = factoryActionsBuffer[i];
 
-                            // Only consider ships that we could build
                             float finalImportance = action.Importance;
                             if (!GameUtilities.HasEnoughResources(action.ResourceCost, in planet))
                             {
@@ -519,7 +495,6 @@ namespace Galaxy
                     }
                 }
 
-                // Start building chosen ship
                 if (chosenAction.PrefabEntity != Entity.Null)
                 {
                     if (GameUtilities.TryConsumeResources(chosenAction.ResourceCost, ref planet))

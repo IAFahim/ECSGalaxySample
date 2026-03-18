@@ -21,7 +21,6 @@ namespace Galaxy
             SubscribeToEvents();
             SetVisualElements();
             RegisterCallbacks();
-            // Initialize the simulation state
             m_SimulationStarted = false;
         }
 
@@ -65,7 +64,6 @@ namespace Galaxy
                 World world = World.DefaultGameObjectInjectionWorld;
                 world.EntityManager.CompleteAllTrackedJobs();
 
-                // Dispose and recreate the default world
                 world.Dispose();
                 {
                     world = new World("DefaultWorld", WorldFlags.Game);
@@ -82,7 +80,6 @@ namespace Galaxy
             }
             else
             {
-                // TODO: Add a confirmation dialog
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
 #else

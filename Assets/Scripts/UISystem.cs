@@ -21,14 +21,12 @@ public partial struct UISystem : ISystem
     {
         Config config = SystemAPI.GetSingleton<Config>();
 
-        // Handle initializing the UI settings
         if (!m_SettingInitialized)
         {
             UIEvents.InitializeUISettings?.Invoke();
             m_SettingInitialized = true;
         }
-        
-        // Handle auto simulate
+
         if (!m_AutoSimulateInitialized && config.AutoInitializeGame && SystemAPI.HasSingleton<GameIsSimulating>())
         {
             UIEvents.SimulateGame?.Invoke();

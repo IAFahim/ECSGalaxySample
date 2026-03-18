@@ -50,7 +50,6 @@ namespace Galaxy
                 m_StatsPanel.style.display = DisplayStyle.Flex;
                 UpdatePanelPosition(statsData.TargetPosition);
 
-                // Update stats
                 m_TeamLabel.text = statsData.PlanetData.TeamIndex < 0
                     ? "NONE"
                     : statsData.PlanetData.TeamIndex.ToString();

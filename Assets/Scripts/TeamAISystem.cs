@@ -61,7 +61,6 @@ namespace Galaxy
         [BurstCompile(FloatPrecision.High, FloatMode.Deterministic)]
         public void OnUpdate(ref SystemState state)
         {
-            // Check for defeated teams
             {
                 bool anyTeamDefeated = false;
                 foreach (var teamManagerAI in SystemAPI.Query<RefRO<TeamManagerAI>>())
@@ -72,10 +71,7 @@ namespace Galaxy
                         break;
                     }
                 }
-            
-                // Only if we detect one team was defeated, launch the defeated teams job.
-                // We do this to avoid building arrays of unit data every frame just for the rare case that a team
-                // was defeated on that frame.
+
                 if (anyTeamDefeated)
                 {
                     EntityQuery unitsQuery = SystemAPI.QueryBuilder().WithAll<Team, Health>().WithAny<Ship, Building>().Build();
@@ -109,7 +105,6 @@ namespace Galaxy
             NativeArray<FleetAssessment> workersFleet = new NativeArray<FleetAssessment>(teamsCount, Allocator.TempJob);
             NativeArray<FleetAssessment> tradersFleet = new NativeArray<FleetAssessment>(teamsCount, Allocator.TempJob);
 
-            // Compute fleet compositions - one job for each ship type, each one in parallel
             {
                 JobHandle initialFleetCompositionsDep = state.Dependency;
 
@@ -132,7 +127,6 @@ namespace Galaxy
                 state.Dependency = JobHandle.CombineDependencies(state.Dependency, traderFleetJob.Schedule(initialFleetCompositionsDep));
             }
 
-            // Each team's AI is solved in parallel
             {
                 NativeArray<Entity> teamEntities = teamQuery.ToEntityArray(state.WorldUpdateAllocator);
                 NativeArray<Entity> planetEntities = planetsQuery.ToEntityArray(state.WorldUpdateAllocator);
@@ -237,7 +231,6 @@ namespace Galaxy
             public Entity ShipsCollectionEntity;
             public Entity BuildingsCollectionEntity;
 
-            // ok to disable safeties because each of these jobs writes to a different team entity
             [NativeDisableParallelForRestriction]
             public ComponentLookup<TeamManagerAI> TeamManagerAILookup;
 
@@ -290,23 +283,19 @@ namespace Galaxy
                 DynamicBuffer<PlanetIntel> planetIntels = PlanetIntelLookup[teamEntity];
                 NativeList<Entity> teamPlanetEntities = new NativeList<Entity>(32, Allocator.Temp);
 
-                // Initialize random
                 if (teamManagerAI.Random.state == 0)
                 {
                     teamManagerAI.Random = GameUtilities.GetDeterministicRandom(teamEntity.Index);
                 }
 
-                // Clear buffers
                 fighterActions.Clear();
                 workerActions.Clear();
                 traderActions.Clear();
                 factoryActions.Clear();
                 planetIntels.Clear();
 
-                // Compute statistics about our empire and surroundings
                 ComputeEmpireStatistics(teamIndex, teamPlanetEntities, ref teamManagerAI, ref planetIntels);
 
-                // Check for team death
                 if (teamManagerAI.EmpireStatistics.OwnedPlanetsCount <= 0)
                 {
                     teamManagerAI.IsDefeated = true;
@@ -318,27 +307,21 @@ namespace Galaxy
                         BuildingCollectionBufferLookup[BuildingsCollectionEntity];
                     UnsafeList<float> tmpImportances = new UnsafeList<float>(32, Allocator.Temp);
 
-                    // AI Processors
                     AIProcessor fighterAIProcessor = new AIProcessor(128, Allocator.Temp);
                     AIProcessor workerAIProcessor = new AIProcessor(128, Allocator.Temp);
                     AIProcessor traderAIProcessor = new AIProcessor(128, Allocator.Temp);
 
-                    // Handle creating the list of possible actions that factory AI can choose from
-                    // (which ships to build)
                     HandleFactoryActions(ref teamManagerAI, in shipsCollection, ref factoryActions);
 
-                    // Compute per-planet actions for ships
                     for (int i = 0; i < planetIntels.Length; i++)
                     {
                         PlanetIntel planetIntel = planetIntels[i];
 
-                        // Calculate values used by AI for this planet
                         CalculatePlanetStatistics(
                             in planetIntel,
                             in teamManagerAI,
                             out PlanetStatistics planetStatistics);
 
-                        // Actions related to owned planets
                         if (planetIntel.IsOwned == 1)
                         {
                             HandleFighterDefendAction(
@@ -364,7 +347,6 @@ namespace Galaxy
                                 in planetStatistics,
                                 in teamManagerAI);
                         }
-                        // Actions related to non-owned planets
                         else
                         {
                             HandleFighterAttackAction(
@@ -383,12 +365,10 @@ namespace Galaxy
                         }
                     }
 
-                    // Compute corrected importances after all actions have been registered
                     fighterAIProcessor.ComputeFinalImportances();
                     workerAIProcessor.ComputeFinalImportances();
                     traderAIProcessor.ComputeFinalImportances();
 
-                    // Assign corrected importances to actions
                     {
                         for (int i = 0; i < fighterActions.Length; i++)
                         {
@@ -413,7 +393,6 @@ namespace Galaxy
                     }
                 }
 
-                // Write back team AI values
                 TeamManagerAILookup[teamEntity] = teamManagerAI;
             }
 
@@ -510,17 +489,8 @@ namespace Galaxy
                         ResourceGenerationRate = planet.ResourceGenerationRate,
                         CurrentResourceStorage = planet.ResourceCurrentStorage,
                         MaxResourceStorage = planet.ResourceMaxStorage,
-
-                        //AlliedShips = alliedShips,
                         AlliedFighters = alliedFighters,
-                        //AlliedWorkers = alliedWorkers,
-                        //AlliedTraders = alliedTraders,
-
-                        //EnemyShips = enemyShips,
                         EnemyFighters = enemyFighters,
-                        //EnemyWorkers = enemyWorkers,
-                        //EnemyTraders = enemyTraders,
-
                         FreeMoonEntity = freeMoonEntity,
                         TotalMoonsCount = totalMoons,
                         FreeMoonsCount = freeMoons,
@@ -542,7 +512,6 @@ namespace Galaxy
             {
                 teamManagerAI.EmpireStatistics = default;
 
-                // Fleet
                 teamManagerAI.EmpireStatistics.FightersAssessment = FighterFleetAssessments[teamIndex];
                 teamManagerAI.EmpireStatistics.WorkersAssessment = WorkerFleetAssessments[teamIndex];
                 teamManagerAI.EmpireStatistics.TradersAssessment = TraderFleetAssessments[teamIndex];
@@ -554,7 +523,6 @@ namespace Galaxy
                     teamManagerAI.EmpireStatistics.TotalNonFighterShipsCount +
                     teamManagerAI.EmpireStatistics.FightersAssessment.Count;
 
-                // Gather intel about our team's planets
                 for (int p = 0; p < PlanetEntities.Length; p++)
                 {
                     if (PlanetTeams[p].Index == teamIndex)
@@ -573,7 +541,6 @@ namespace Galaxy
 
                 teamManagerAI.EmpireStatistics.OwnedPlanetsCount = teamPlanetEntities.Length;
 
-                // Gather intel about our team's neighbor planets
                 for (int e = 0; e < teamPlanetEntities.Length; e++)
                 {
                     DynamicBuffer<PlanetNetwork> planetNetworkBuffer = PlanetNetworkLookup[teamPlanetEntities[e]];
@@ -583,7 +550,6 @@ namespace Galaxy
                         PlanetNetwork connectedPlanet = planetNetworkBuffer[i];
                         Entity planetEntity = connectedPlanet.Entity;
 
-                        // Check if planet is already added
                         bool isAlreadyAdded = false;
                         for (int j = 0; j < planetIntels.Length; j++)
                         {
@@ -594,8 +560,6 @@ namespace Galaxy
                             }
                         }
 
-                        // Note: since we've already added all of our own team's planets, all new non-added planets will be non-owned planets.
-                        //      we do this in two steps because we have faster access to our own team's planets data.
                         if (!isAlreadyAdded)
                         {
                             float3 planetPosition = connectedPlanet.Position;
@@ -630,7 +594,6 @@ namespace Galaxy
                 in DynamicBuffer<ShipCollection> shipsCollection,
                 ref DynamicBuffer<FactoryAction> factoryActions)
             {
-                // Calculate total probabilities per ship type
                 float totalFighterProbabilities = 0f;
                 float totalWorkerProbabilities = 0f;
                 float totalTraderProbabilities = 0f;
@@ -654,7 +617,6 @@ namespace Galaxy
                     }
                 }
 
-                // For each ship type we could produce, compute an importance
                 for (int i = 0; i < shipsCollection.Length; i++)
                 {
                     ShipCollection shipInfo = shipsCollection[i];
@@ -662,7 +624,6 @@ namespace Galaxy
                     ref ShipData shipData = ref shipInfo.ShipData.Value;
                     float shipBuildProbability = shipData.BuildProbabilityForShipType;
 
-                    // Calculate biases
                     teamManagerAI.FighterBias = teamManagerAI.MaxShipProductionBias;
                     if (teamManagerAI.EmpireStatistics.FightersAssessment.Value > 0f)
                     {
@@ -682,7 +643,6 @@ namespace Galaxy
                     if (teamManagerAI.EmpireStatistics.TradersAssessment.Value > 0f)
                     {
                         int planetCount = teamManagerAI.EmpireStatistics.OwnedPlanetsCount;
-                        // traders need at least 2 planets to avoid staying in idle.
                         if (planetCount >= 2)
                         {
                             teamManagerAI.TraderBias = (teamManagerAI.DesiredTraderValuePerOwnedPlanet * planetCount) /
@@ -694,7 +654,6 @@ namespace Galaxy
                         }
                     }
 
-                    // Calculate final probability
                     float finalProbability = 0f;
                     switch (shipActorType.Type)
                     {
@@ -734,7 +693,6 @@ namespace Galaxy
                 in DynamicBuffer<BuildingCollection> buildingsCollectionBuffer,
                 ref Random random)
             {
-                // Prioritize factories
                 bool planetHasAFactory = false;
                 if (MoonReferenceLookup.TryGetBuffer(planetEntity, out DynamicBuffer<MoonReference> moonReferences))
                 {
@@ -757,7 +715,6 @@ namespace Galaxy
                     }
                 }
 
-                // First select a random building
                 Entity buildingPrefab = default;
                 {
                     tmpImportances.Clear();
@@ -779,7 +736,6 @@ namespace Galaxy
                     }
                 }
 
-                // But if planet doesn't have a factory, search for a factory
                 if (!planetHasAFactory)
                 {
                     for (int i = 0; i < buildingsCollectionBuffer.Length; i++)
@@ -844,7 +800,6 @@ namespace Galaxy
                 in PlanetStatistics planetStatistics,
                 in TeamManagerAI teamManagerAI)
             {
-                // Fighters want to defend valuable planets
                 AIAction fighterAIAction = AIAction.New();
 
                 fighterAIAction.ApplyConsideration(MathUtilities.Clamp(planetStatistics.ThreatLevel,
@@ -873,7 +828,6 @@ namespace Galaxy
                 ref TeamManagerAI teamManagerAI,
                 ref UnsafeList<float> tmpImportances)
             {
-                // Workers want to build buildings on owned planets that have available moons (moons are building slots)
                 AIAction workerAIAction = AIAction.New();
 
                 if (planetIntel.FreeMoonsCount > 0 && planetIntel.FreeMoonEntity != Entity.Null)
@@ -890,7 +844,6 @@ namespace Galaxy
                         float buildingOccupancyBias =
                             math.saturate((float)planetIntel.FreeMoonsCount / (float)planetIntel.TotalMoonsCount);
 
-                        // Workers are more interested in building building on high-resource planets
                         workerAIAction.ApplyConsideration(MathUtilities.Clamp(planetStatistics.SafetyLevel,
                             teamManagerAI.WorkerBuildSafetyLevelConsiderationClamp));
                         workerAIAction.ApplyConsideration(MathUtilities.Clamp(planetStatistics.ResourceGenerationScore,
@@ -902,7 +855,7 @@ namespace Galaxy
                         {
                             GameUtilities.AddAction(ref workerActions, ref workerAIProcessor, new WorkerAction
                             {
-                                Type = (byte)1, // Build
+                                Type = (byte)1,
                                 Entity = planetIntel.FreeMoonEntity,
                                 Position = freeMoonPosition,
                                 PlanetRadius = freeMoonRadius,
@@ -920,7 +873,6 @@ namespace Galaxy
                 in PlanetStatistics planetStatistics,
                 in TeamManagerAI teamManagerAI)
             {
-                // Traders trade between owned planets and try to even out resource storages across all planets
                 AIAction traderAIAction = AIAction.New();
 
                 traderAIAction.ApplyConsideration(MathUtilities.Clamp(planetStatistics.SafetyLevel,
@@ -945,7 +897,6 @@ namespace Galaxy
                 in PlanetStatistics planetStatistics,
                 in TeamManagerAI teamManagerAI)
             {
-                // Fighters want to go fight for non-owned planets
                 AIAction fighterAIAction = AIAction.New();
 
                 fighterAIAction.ApplyConsideration(MathUtilities.Clamp(planetStatistics.ThreatLevel,
@@ -974,7 +925,6 @@ namespace Galaxy
                 in PlanetStatistics planetStatistics,
                 in TeamManagerAI teamManagerAI)
             {
-                // Workers want to capture non-owned planets, but with a bias for safety
                 AIAction workerAIAction = AIAction.New();
 
                 workerAIAction.ApplyConsideration(MathUtilities.Clamp(planetStatistics.SafetyLevel,
@@ -989,7 +939,7 @@ namespace Galaxy
                 {
                     GameUtilities.AddAction(ref workerActions, ref workerAIProcessor, new WorkerAction
                     {
-                        Type = (byte)0, // Capture
+                        Type = (byte)0,
                         Entity = planetIntel.Entity,
                         Position = planetIntel.Position,
                         PlanetRadius = planetIntel.PlanetRadius,
@@ -1014,7 +964,6 @@ namespace Galaxy
                 {
                     ECB.DestroyEntity(entity);
 
-                    // Destroy all units belonging to this team
                     for (int i = 0; i < UnitTeams.Length; i++)
                     {
                         if (UnitTeams[i].Index == team.Index)

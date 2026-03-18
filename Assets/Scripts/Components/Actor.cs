@@ -3,13 +3,11 @@ using Unity.Entities;
 public struct ActorType : IComponentData
 {
     public byte Type;
-    
-    // Ships
+
     public const byte FighterType = 1;
     public const byte WorkerType = 2;
     public const byte TraderType = 3;
-    
-    // Buildings
+
     public const byte FactoryType = 11;
     public const byte TurretType = 12;
     public const byte ResearchType = 13;

@@ -23,24 +23,19 @@ namespace Galaxy
         [Tooltip("Required UI Document")] [SerializeField]
         UIDocument m_Document;
 
-        // UI screens
         private UIScreen m_HomeScreen;
         private UIScreen m_SettingsScreen;
         private UIScreen m_StatsScreen;
         private UIScreen m_HUDScreen;
 
-        // The currently active UIScreen
         private UIScreen m_CurrentScreen;
 
-        // A stack of previously displayed UIScreens
         private Stack<UIScreen> m_History = new();
 
-        // A list of all Views to show/hide
         private List<UIScreen> m_Screens = new();
         public UIScreen CurrentScreen => m_CurrentScreen;
         public UIDocument Document => m_Document;
 
-        // Register event listeners to game events
         private void OnEnable()
         {
             SubscribeToEvents();
@@ -49,7 +44,6 @@ namespace Galaxy
             Show(m_HomeScreen, false);
         }
 
-        // Unregister the listeners to prevent errors
         private void OnDisable()
         {
             UnsubscribeFromEvents();
@@ -57,7 +51,6 @@ namespace Galaxy
 
         private void SubscribeToEvents()
         {
-            // Pair GameEvents with methods to Show each screen
             UIEvents.SettingsShown += UIEvents_SettingsShown;
             UIEvents.ScreenClosed += UIEvents_ScreenClosed;
             UIEvents.HomeScreenShown += UIEvents_HomeScreenShown;
@@ -81,8 +74,6 @@ namespace Galaxy
             UIEvents.IgnoreCameraInput?.Invoke(false);
             gameObject.SetActive(false);
         }
-
-        // Event-handling methods
 
         private void UIEvents_SettingsShown()
         {
@@ -115,7 +106,6 @@ namespace Galaxy
             }
         }
 
-        // Remove the top UI screen from the stack and make that active (i.e., go back one screen)
         public void UIEvents_ScreenClosed()
         {
             if (m_History.Count != 0)
@@ -124,9 +114,6 @@ namespace Galaxy
             }
         }
 
-        // Methods
-
-        // Clears history and hides all Views except the Start Screen
         private void Initialize()
         {
             VisualElement root = m_Document.rootVisualElement;
@@ -139,13 +126,10 @@ namespace Galaxy
             RegisterScreens();
             HideScreens();
 
-            // TODO: Call event when finish loading
             Show(m_HomeScreen, false);
-            // Disable camera input by default
             UIEvents.IgnoreCameraInput?.Invoke(true);
         }
 
-        // Store each UIScreen into a master list so we can hide all of them easily.
         private void RegisterScreens()
         {
             m_Screens = new List<UIScreen>
@@ -157,7 +141,6 @@ namespace Galaxy
             };
         }
 
-        // Clear history and hide all Views
         private void HideScreens()
         {
             m_History.Clear();
@@ -168,7 +151,6 @@ namespace Galaxy
             }
         }
 
-        // Finds the first registered UI View of the specified type T
         public T GetScreen<T>() where T : UIScreen
         {
             foreach (var screen in m_Screens)
@@ -182,8 +164,6 @@ namespace Galaxy
             return null;
         }
 
-        // Shows a View of a specific type T, with the option to add it
-        // to the history stack
         public void Show<T>(bool keepInHistory = true) where T : UIScreen
         {
             foreach (var screen in m_Screens)
@@ -196,7 +176,6 @@ namespace Galaxy
             }
         }
 
-        // Shows a UIScreen with the option to add it to the history stack
         public void Show(UIScreen screen, bool keepInHistory = true)
         {
             if (screen == null)
